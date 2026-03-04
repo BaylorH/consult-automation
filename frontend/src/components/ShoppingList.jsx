@@ -123,7 +123,7 @@ export default function ShoppingList() {
           </div>
         </div>
         <div className="h-[29px] shrink-0 w-[85px]" data-node-id="20:359" />
-        <div className="content-stretch flex flex-col items-center pt-[30px] relative shrink-0 w-full" data-node-id="20:360">
+        <div className="content-stretch flex flex-col items-start pt-[30px] relative shrink-0 w-full" data-node-id="20:360">
           <div className="border border-[#ccc] border-solid content-stretch flex gap-[30px] h-[231px] items-start justify-center leading-[normal] not-italic pt-[30px] relative shrink-0 text-[14px] text-black w-[634px] whitespace-pre-wrap" data-node-id="20:361">
             <div className="font-['Avenir:Heavy',sans-serif] relative shrink-0 w-[394px]" data-node-id="20:362">
               <p className="mb-0">Subtotal:</p>

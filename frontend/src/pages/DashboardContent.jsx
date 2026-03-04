@@ -1,19 +1,26 @@
 // DashboardContent - Main content only (Layout provides sidebar)
 import { useNavigate } from 'react-router-dom';
+import { useProposals } from '../hooks/useProposals';
 
 const imgImage7 = "https://www.figma.com/api/mcp/asset/f55a3330-8e8f-4469-a0ad-1953d62f9973";
 const imgImage3 = "https://www.figma.com/api/mcp/asset/75c7788f-baec-4845-b1ca-d562f48e9e1d";
-const imgImage8 = "https://www.figma.com/api/mcp/asset/cd315ad4-2c3a-42b2-9275-48274563c445";
-const imgImage9 = "https://www.figma.com/api/mcp/asset/1ca91548-dda3-4d97-982b-952d863e69a6";
-const imgImage10 = "https://www.figma.com/api/mcp/asset/6c4108f1-39a0-4e9c-9323-23b67aaae990";
-const imgImage11 = "https://www.figma.com/api/mcp/asset/e2c6e9ed-17d1-42de-848c-e9c03958fbae";
-const imgScreenshot20260121At111738Am1 = "https://www.figma.com/api/mcp/asset/c73da2b9-f214-4456-8e7b-657c00b9d0f1";
-const imgImage12 = "https://www.figma.com/api/mcp/asset/2a79e4d7-51da-40d0-968f-73e270b863cf";
-const imgImage13 = "https://www.figma.com/api/mcp/asset/bc7a18cb-3e8e-4504-a923-752bade2a7ae";
-const imgImage14 = "https://www.figma.com/api/mcp/asset/5d50eef7-8bb8-4a4c-a0bf-28d30230f486";
+const imgImage4 = "https://www.figma.com/api/mcp/asset/ce0fd175-39ad-4c31-b6e8-79abaf5373b2";
 
 export default function DashboardContent() {
   const navigate = useNavigate();
+  const { proposals, loading, error } = useProposals();
+
+  // Format Firestore timestamp to display string
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    // Handle Firestore Timestamp object
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="flex flex-col gap-[15px] p-[15px] pb-[30px]">
@@ -49,78 +56,41 @@ export default function DashboardContent() {
             Recent Proposals
           </p>
 
-          <ProposalCard
-            type="Wedding"
-            typeColor="#055e5a"
-            title="Jonathan & Amandas Wedding Flowers"
-            image={imgImage8}
-            date="March 19, 2026"
-            author="Becky Memmo"
-            onEdit={() => navigate('/proposal/1')}
-          />
-          <ProposalCard
-            type="Bachelorette"
-            typeColor="#3ba59a"
-            title="Brittany's Bachelorette Weekend"
-            image={imgImage9}
-            date="March 19, 2026"
-            author="Becky Memmo"
-            onEdit={() => navigate('/proposal/2')}
-          />
-          <ProposalCard
-            type="Wedding"
-            typeColor="#055e5a"
-            title="Callum & Jackie's Wedding Flowers"
-            image={imgImage10}
-            date="March 19, 2026"
-            author="Cynthia Paz"
-            onEdit={() => navigate('/proposal/3')}
-          />
-          <ProposalCard
-            type="Quinceeanera"
-            typeColor="#e5c236"
-            title="Tiffany García's 15 Birthday"
-            image={imgImage11}
-            date="March 19, 2026"
-            author="Becky Memmo"
-            onEdit={() => navigate('/proposal/4')}
-          />
-          <ProposalCard
-            type="Wedding"
-            typeColor="#055e5a"
-            title="Kowalski Wedding Ceremony"
-            image={imgScreenshot20260121At111738Am1}
-            date="March 19, 2026"
-            author="Adelena Whittaker"
-            onEdit={() => navigate('/proposal/5')}
-          />
-          <ProposalCard
-            type="Wedding"
-            typeColor="#055e5a"
-            title="Beth Goldstein Tropical Wedding"
-            image={imgImage12}
-            date="March 19, 2026"
-            author="Mari Ramos"
-            onEdit={() => navigate('/proposal/6')}
-          />
-          <ProposalCard
-            type="Wedding"
-            typeColor="#055e5a"
-            title="Patels Traditional Wedding"
-            image={imgImage13}
-            date="March 19, 2026"
-            author="Adelena Whittaker"
-            onEdit={() => navigate('/proposal/7')}
-          />
-          <ProposalCard
-            type="Baby Shower"
-            typeColor="#e28dd6"
-            title="Singer Modern Baby Shower"
-            image={imgImage14}
-            date="March 19, 2026"
-            author="Camille Lemons"
-            onEdit={() => navigate('/proposal/8')}
-          />
+          {loading && (
+            <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
+              Loading proposals...
+            </p>
+          )}
+
+          {error && (
+            <p className="font-['Avenir:Roman',sans-serif] text-red-500 text-[16px]">
+              Error loading proposals: {error}
+            </p>
+          )}
+
+          {!loading && !error && proposals.length === 0 && (
+            <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
+              <div className="size-[20px]">
+                <img alt="" className="max-w-none object-cover size-full" src={imgImage4} />
+              </div>
+              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
+                No proposals yet. Click "Create New Proposal" to get started.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && proposals.map((proposal) => (
+            <ProposalCard
+              key={proposal.id}
+              type={proposal.type}
+              typeColor={proposal.typeColor}
+              title={proposal.eventName}
+              image={proposal.cardImage}
+              date={formatDate(proposal.updatedAt)}
+              author={proposal.author}
+              onEdit={() => navigate(`/proposal/${proposal.id}`)}
+            />
+          ))}
         </div>
       </div>
     </div>
