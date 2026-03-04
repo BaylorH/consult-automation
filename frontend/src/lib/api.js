@@ -1,8 +1,8 @@
 // API Configuration for backend services
 
-// BB Dev API Gateway URL (will be updated after deployment)
+// BB Dev API Gateway URL
 // For local development, can be overridden with VITE_API_URL env variable
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-bb-dev.fiftyflowers.com';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lte9x6yrn5.execute-api.us-east-1.amazonaws.com/Prod';
 
 // API endpoints
 export const ENDPOINTS = {

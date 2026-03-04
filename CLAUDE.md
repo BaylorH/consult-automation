@@ -196,7 +196,7 @@ const product = await getProduct(handle);
 ### API Configuration
 **Path**: `frontend/src/lib/api.js`
 - Set `VITE_API_URL` env var to override the API base URL
-- Default: `https://api-bb-dev.fiftyflowers.com`
+- BB Dev URL: `https://lte9x6yrn5.execute-api.us-east-1.amazonaws.com/Prod`
 
 ---
 
@@ -262,4 +262,3 @@ cd frontend && npm run dev
 
 1. **Save functionality**: Auto-save or manual save button?
 2. **PDF generation**: Which library? (react-pdf, puppeteer, etc.)
-3. **BB Dev API URL**: Need the actual API Gateway URL after deployment
