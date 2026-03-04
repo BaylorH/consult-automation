@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import ProposalForm from './pages/ProposalForm';
+import Layout from './components/Layout';
+import DashboardContent from './pages/DashboardContent';
+import ProposalFormContent from './pages/ProposalFormContent';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -43,7 +44,9 @@ function AppRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Layout>
+              <DashboardContent />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -51,7 +54,9 @@ function AppRoutes() {
         path="/proposal/:id"
         element={
           <ProtectedRoute>
-            <ProposalForm />
+            <Layout>
+              <ProposalFormContent />
+            </Layout>
           </ProtectedRoute>
         }
       />
