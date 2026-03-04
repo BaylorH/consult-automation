@@ -57,12 +57,21 @@ export default function ProposalFormContent() {
   const { searchProducts, getProduct, results: searchResults, loading: searchLoading, clearResults } = useProductSearch();
 
   // Inspiration & Style state
-  const [showImageUrlInput, setShowImageUrlInput] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
   const [newImageUrl, setNewImageUrl] = useState('');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [newColor, setNewColor] = useState('#ffffff');
   const imageInputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const colorInputRef = useRef(null);
+
+  // Preset color swatches for quick selection
+  const presetColors = [
+    '#FF6B6B', '#FF8E53', '#FFD93D', '#6BCB77', '#4D96FF', '#9B59B6',
+    '#E91E63', '#F8BBD9', '#FFFFFF', '#F5F5F5', '#9E9E9E', '#212121',
+    '#8B4513', '#D2691E', '#DEB887', '#F5DEB3', '#FAEBD7', '#FFF8DC',
+  ];
 
   // Populate form when proposal data loads
   useEffect(() => {
@@ -213,23 +222,41 @@ export default function ProposalFormContent() {
   // Inspiration Images handlers
   const handleAddImage = () => {
     if (inspirationImages.length >= 8) return;
-    setShowImageUrlInput(true);
+    setShowImageModal(true);
+    setImageInputMode('url');
     setNewImageUrl('');
-    // Focus the input after it renders
     setTimeout(() => imageInputRef.current?.focus(), 100);
   };
 
-  const handleSaveImage = () => {
+  const handleSaveImageUrl = () => {
     if (newImageUrl.trim() && inspirationImages.length < 8) {
       setInspirationImages(prev => [...prev, newImageUrl.trim()]);
       setNewImageUrl('');
-      setShowImageUrlInput(false);
+      setShowImageModal(false);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file && inspirationImages.length < 8) {
+      // Convert to base64 data URL for now
+      // In production, you'd upload to Firebase Storage
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setInspirationImages(prev => [...prev, event.target.result]);
+        setShowImageModal(false);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleCancelImage = () => {
     setNewImageUrl('');
-    setShowImageUrlInput(false);
+    setShowImageModal(false);
   };
 
   const handleRemoveImage = (index) => {
@@ -240,7 +267,14 @@ export default function ProposalFormContent() {
   const handleAddColor = () => {
     if (colorPalette.length >= 8) return;
     setShowColorPicker(true);
-    setNewColor('#ffffff');
+    setNewColor('#4D96FF');
+  };
+
+  const handleSelectPresetColor = (color) => {
+    if (colorPalette.length < 8) {
+      setColorPalette(prev => [...prev, color]);
+      setShowColorPicker(false);
+    }
   };
 
   const handleSaveColor = () => {
@@ -474,33 +508,94 @@ export default function ProposalFormContent() {
                   </p>
                 </div>
               )}
-              {/* Image URL Input Modal */}
-              {showImageUrlInput && (
-                <div className="border border-[#ccc] border-solid flex flex-col gap-[10px] p-[15px] rounded-[5px] w-[300px]">
-                  <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[12px]">Enter Image URL</p>
-                  <input
-                    ref={imageInputRef}
-                    type="text"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveImage()}
-                    placeholder="https://..."
-                    className="border border-[#ccc] border-solid px-[10px] py-[8px] text-[14px] outline-none"
-                  />
-                  <div className="flex gap-[10px]">
+              {/* Image Add Modal */}
+              {showImageModal && (
+                <div className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] w-[320px] bg-white shadow-lg">
+                  <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Add an Image</p>
+
+                  {/* Tab buttons */}
+                  <div className="flex border-b border-[#eee]">
                     <button
-                      onClick={handleSaveImage}
-                      className="bg-[#4a9380] text-white px-[15px] py-[5px] text-[12px] rounded"
+                      onClick={() => setImageInputMode('url')}
+                      className={`px-[15px] py-[8px] text-[12px] font-['Avenir:Roman',sans-serif] ${
+                        imageInputMode === 'url'
+                          ? 'text-[#4a9380] border-b-2 border-[#4a9380]'
+                          : 'text-[#666]'
+                      }`}
                     >
-                      Add
+                      From URL
                     </button>
                     <button
-                      onClick={handleCancelImage}
-                      className="border border-[#ccc] px-[15px] py-[5px] text-[12px] rounded"
+                      onClick={() => setImageInputMode('upload')}
+                      className={`px-[15px] py-[8px] text-[12px] font-['Avenir:Roman',sans-serif] ${
+                        imageInputMode === 'upload'
+                          ? 'text-[#4a9380] border-b-2 border-[#4a9380]'
+                          : 'text-[#666]'
+                      }`}
                     >
-                      Cancel
+                      From Computer
                     </button>
                   </div>
+
+                  {/* URL Input */}
+                  {imageInputMode === 'url' && (
+                    <div className="flex flex-col gap-[10px]">
+                      <input
+                        ref={imageInputRef}
+                        type="text"
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveImageUrl()}
+                        placeholder="Paste image URL here..."
+                        className="border border-[#ccc] border-solid px-[10px] py-[10px] text-[14px] outline-none rounded"
+                      />
+                      <div className="flex gap-[10px]">
+                        <button
+                          onClick={handleSaveImageUrl}
+                          disabled={!newImageUrl.trim()}
+                          className="bg-[#4a9380] text-white px-[20px] py-[8px] text-[12px] rounded disabled:opacity-50"
+                        >
+                          Add Image
+                        </button>
+                        <button
+                          onClick={handleCancelImage}
+                          className="border border-[#ccc] px-[20px] py-[8px] text-[12px] rounded hover:bg-[#f5f5f5]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File Upload */}
+                  {imageInputMode === 'upload' && (
+                    <div className="flex flex-col gap-[10px]">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-[#ccc] rounded-[5px] py-[30px] px-[20px] text-center hover:border-[#4a9380] hover:bg-[#f9fdfb] transition-colors"
+                      >
+                        <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px]">
+                          Click to browse files
+                        </p>
+                        <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[11px] mt-[5px]">
+                          JPG, PNG, GIF up to 10MB
+                        </p>
+                      </button>
+                      <button
+                        onClick={handleCancelImage}
+                        className="border border-[#ccc] px-[20px] py-[8px] text-[12px] rounded hover:bg-[#f5f5f5]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -550,34 +645,67 @@ export default function ProposalFormContent() {
                 )}
                 {/* Color Picker */}
                 {showColorPicker && (
-                  <div className="border border-[#ccc] border-solid flex flex-col gap-[10px] p-[15px] rounded-[5px]">
-                    <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[12px]">Pick a Color</p>
-                    <div className="flex gap-[10px] items-center">
-                      <input
-                        ref={colorInputRef}
-                        type="color"
-                        value={newColor}
-                        onChange={(e) => setNewColor(e.target.value)}
-                        className="w-[50px] h-[40px] cursor-pointer border-none"
-                      />
-                      <input
-                        type="text"
-                        value={newColor}
-                        onChange={(e) => setNewColor(e.target.value)}
-                        placeholder="#ffffff"
-                        className="border border-[#ccc] border-solid px-[10px] py-[5px] text-[12px] w-[80px] outline-none"
-                      />
+                  <div className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] bg-white shadow-lg w-[280px]">
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Choose a Color</p>
+
+                    {/* Quick Pick - Preset Swatches */}
+                    <div className="flex flex-col gap-[8px]">
+                      <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[11px] uppercase">Quick Pick</p>
+                      <div className="grid grid-cols-6 gap-[8px]">
+                        {presetColors.map((color, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleSelectPresetColor(color)}
+                            className="w-[32px] h-[32px] rounded-full border border-[#ddd] hover:scale-110 transition-transform hover:border-[#999]"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex gap-[10px]">
+
+                    {/* Divider */}
+                    <div className="border-t border-[#eee]" />
+
+                    {/* Custom Color */}
+                    <div className="flex flex-col gap-[8px]">
+                      <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[11px] uppercase">Custom Color</p>
+                      <div className="flex gap-[10px] items-center">
+                        <input
+                          ref={colorInputRef}
+                          type="color"
+                          value={newColor}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          className="w-[50px] h-[40px] cursor-pointer border border-[#ccc] rounded"
+                        />
+                        <div className="flex flex-col gap-[5px] flex-1">
+                          <input
+                            type="text"
+                            value={newColor}
+                            onChange={(e) => setNewColor(e.target.value)}
+                            placeholder="#ffffff"
+                            className="border border-[#ccc] border-solid px-[10px] py-[6px] text-[12px] outline-none rounded w-full"
+                          />
+                        </div>
+                        <div
+                          className="w-[40px] h-[40px] rounded border border-[#ccc]"
+                          style={{ backgroundColor: newColor }}
+                          title="Preview"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-[10px] pt-[5px]">
                       <button
                         onClick={handleSaveColor}
-                        className="bg-[#4a9380] text-white px-[15px] py-[5px] text-[12px] rounded"
+                        className="bg-[#4a9380] text-white px-[20px] py-[8px] text-[12px] rounded flex-1"
                       >
-                        Add
+                        Add Color
                       </button>
                       <button
                         onClick={handleCancelColor}
-                        className="border border-[#ccc] px-[15px] py-[5px] text-[12px] rounded"
+                        className="border border-[#ccc] px-[20px] py-[8px] text-[12px] rounded hover:bg-[#f5f5f5]"
                       >
                         Cancel
                       </button>
