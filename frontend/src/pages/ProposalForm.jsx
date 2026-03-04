@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ShoppingList from '../components/ShoppingList';
+import BasicFloralRecipes from '../components/BasicFloralRecipes';
 
 const imgScreenshot20260118At41938Pm1 = "https://www.figma.com/api/mcp/asset/9ebaa3c8-5e57-405a-bf7d-798f38ce3e26";
 const imgScreenshot20260118At42723Pm1 = "https://www.figma.com/api/mcp/asset/671b6103-dfeb-4527-a6bc-fd16b8592eb5";
@@ -303,6 +304,9 @@ export default function ProposalForm() {
               </div>
             </div>
           </div>
+          {!isProfessional && (
+            <BasicFloralRecipes />
+          )}
           {isProfessional && (
           <div className="bg-white border border-[#eef0ef] border-solid content-start flex flex-wrap gap-[30px] items-start p-[30px] relative rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)] shrink-0 w-full" data-name="Custom Floral Recipes" data-node-id="28:583">
             <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] w-[960px]" data-node-id="28:584">
