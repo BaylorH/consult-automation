@@ -6,22 +6,11 @@ import BasicFloralRecipes from '../components/BasicFloralRecipes';
 import { useProposal, proposalService } from '../hooks/useProposals';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
 
-// Inline SVG icons (no network requests, instant load)
-const ImageIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#999]">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <path d="M21 15l-5-5L5 21" />
-  </svg>
-);
+// Local image assets (downloaded from Figma)
+import addPhotoIcon from '../assets/images/add-photo-icon.png';
+import colorPaletteIcon from '../assets/images/color-palette-icon.png';
 
-const ColorIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#999]">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
-  </svg>
-);
-
+// Inline SVG icons for elements that don't have Figma assets
 const InfoIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#666]">
     <circle cx="12" cy="12" r="9" />
@@ -673,7 +662,7 @@ export default function ProposalFormContent() {
                   className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
                 >
                   <div className="opacity-50 size-[40px]">
-                    <ImageIcon />
+                    <img alt="" className="size-full object-cover" src={addPhotoIcon} />
                   </div>
                   <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                     Add a Photo
@@ -687,7 +676,7 @@ export default function ProposalFormContent() {
                   className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
                 >
                   <div className="opacity-50 size-[40px]">
-                    <ImageIcon />
+                    <img alt="" className="size-full object-cover" src={addPhotoIcon} />
                   </div>
                   <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                     Add a Photo
@@ -821,10 +810,10 @@ export default function ProposalFormContent() {
                   <div
                     key={`empty-color-${i}`}
                     onClick={handleAddColor}
-                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
+                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-[100px] cursor-pointer hover:bg-[#fafafa]"
                   >
                     <div className="size-[40px]">
-                      <ColorIcon />
+                      <img alt="" className="size-full object-cover opacity-50" src={colorPaletteIcon} />
                     </div>
                   </div>
                 ))}
@@ -832,10 +821,10 @@ export default function ProposalFormContent() {
                 {colorPalette.length >= 4 && showAddColorButton && (
                   <div
                     onClick={handleAddColor}
-                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
+                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-[100px] cursor-pointer hover:bg-[#fafafa]"
                   >
                     <div className="size-[40px]">
-                      <ColorIcon />
+                      <img alt="" className="size-full object-cover opacity-50" src={colorPaletteIcon} />
                     </div>
                   </div>
                 )}
@@ -1301,7 +1290,7 @@ export default function ProposalFormContent() {
                     ) : (
                       <div className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]">
                         <div className="opacity-50 size-[40px]">
-                          <ImageIcon />
+                          <img alt="" className="size-full object-cover" src={addPhotoIcon} />
                         </div>
                         <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                           Add a Photo
