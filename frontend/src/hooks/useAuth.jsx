@@ -51,6 +51,8 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
+      // Clear session storage cache on logout for fresh start
+      sessionStorage.clear();
       await signOut(auth);
     } catch (err) {
       setError(err.message);
