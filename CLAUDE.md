@@ -21,7 +21,10 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
 
 ### Form Sections Implemented
 1. **Consultation Proposal Set** - All fields working (customer info, dates, consultation level)
-2. **Inspiration & Style** - Images + color palette display (min 4, max 8 with Add buttons)
+2. **Inspiration & Style** - Images + color palette with working Add/Remove functionality
+   - Add Photo: Opens URL input modal
+   - Add Color: Opens native color picker with hex input
+   - Remove: Hover to reveal X button on images/colors
 3. **Featured Blooms** - Display with images, pricing tiers, remove buttons, **product search working**
 4. **Custom Floral Recipes** (Professional) - Recipe cards with images, ingredients list, Edit/Remove buttons
 5. **Basic Floral Recipes** (Basic) - Template-based recipes component
