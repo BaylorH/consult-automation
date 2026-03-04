@@ -94,8 +94,8 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="bg-[#fcfefe] flex flex-col flex-1 min-h-screen">
+      {/* Main Content Area - pt-[60px] accounts for fixed user pill */}
+      <div className="bg-[#fcfefe] flex flex-col flex-1 min-h-screen pt-[60px]">
         {children}
       </div>
     </div>
