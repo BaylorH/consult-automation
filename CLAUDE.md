@@ -14,17 +14,25 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
 - **React + Vite + Tailwind** frontend scaffolded
 - **Firebase Hosting** deployed at https://consult-automation.web.app
 - **Firestore** database integrated with security rules (@fiftyflowers.com users only)
-- **Dashboard** reads proposals from Firestore, displays proposal cards
+- **Dashboard** reads proposals from Firestore, displays proposal cards with loading animation
 - **Proposal Form** loads data via URL params (`/proposal/:id`)
 - **Layout** with persistent sidebar navigation
 - **DevTools** component for database seeding (dev mode only)
+- **Auto-save** with debounced saves (1.5s delay) to Firestore
+- **Session storage caching** (5-minute TTL) to reduce Firestore reads
+- **Local assets** - All images downloaded from Figma, hosted locally (no external API calls)
+- **Flower celebration animation** on login success
+- **User profile pill** (avatar, name, logout) in top right corner
+- **Branded login page** with gradient background, pattern overlay, white card
+- **Loading animation** in main content area (1.2s minimum display time)
 
 ### Form Sections Implemented
 1. **Consultation Proposal Set** - All fields working (customer info, dates, consultation level)
 2. **Inspiration & Style** - Images + color palette with full Add/Remove functionality
-   - Add Photo: Tab interface with "From URL" or "From Computer" (file upload)
+   - Add Photo: Tab interface with "From URL" or "From Computer" (file upload with drag & drop)
    - Add Color: Quick Pick preset swatches (18 colors) OR custom color picker with hex input
    - Remove: Hover to reveal X button on images/colors
+   - Icons match Figma design (downloaded locally)
 3. **Featured Blooms** - Display with images, pricing tiers, remove buttons, **product search working**
 4. **Custom Floral Recipes** (Professional) - Recipe cards with images, ingredients list, Edit/Remove buttons
 5. **Basic Floral Recipes** (Basic) - Template-based recipes component
@@ -39,7 +47,7 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
   - `GET /search-products/{handle}` - Get full product details with variants
 
 ### Pending
-- **Save functionality** - Write changes back to Firestore
+- **Share proposal functionality**
 - **PDF generation** - Visual presentation output
 
 ---
@@ -59,27 +67,41 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
 ```
 frontend/
 ├── src/
+│   ├── assets/images/          # Bundled images (logos, icons)
+│   │   ├── logo-main.png
+│   │   ├── logo-flower.png
+│   │   ├── chevron.png
+│   │   ├── add-photo-icon.png
+│   │   ├── color-palette-icon.png
+│   │   ├── recipe-*.png        # Recipe thumbnails
+│   │   └── shopping-list-icon.png
 │   ├── components/
-│   │   ├── Layout.jsx              # Persistent sidebar layout
-│   │   ├── Sidebar.jsx             # Navigation sidebar
-│   │   ├── ProposalCard.jsx        # Dashboard card component
+│   │   ├── Layout.jsx              # Persistent sidebar + user pill
 │   │   ├── BasicFloralRecipes.jsx  # Basic tier recipes
 │   │   ├── ShoppingList.jsx        # Shopping list component
+│   │   ├── LoadingScreen.jsx       # Full-page loading (unused now)
 │   │   └── DevTools.jsx            # Dev-only database tools
 │   ├── pages/
-│   │   ├── Login.jsx               # Firebase Auth login
-│   │   ├── DashboardContent.jsx    # Proposal grid
-│   │   └── ProposalFormContent.jsx # Main form (all sections)
+│   │   ├── Login.jsx               # Branded login with gradient bg
+│   │   ├── DashboardContent.jsx    # Proposal grid with loading animation
+│   │   └── ProposalFormContent.jsx # Main form (all sections) with auto-save
 │   ├── hooks/
-│   │   ├── useAuth.jsx             # Auth context & hook
-│   │   ├── useProposals.jsx        # Firestore CRUD operations
+│   │   ├── useAuth.jsx             # Auth context + flower celebration
+│   │   ├── useProposals.jsx        # Firestore CRUD + session caching
 │   │   └── useProductSearch.jsx    # Shopify product search
+│   ├── utils/
+│   │   └── celebrate.js            # Flower celebration animation
 │   ├── lib/
 │   │   ├── firebase.js             # Firebase config
 │   │   └── api.js                  # Lambda API config
 │   ├── data/
-│   │   └── seedProposals.js        # Sample data for development
+│   │   └── seedProposals.js        # Sample data (uses local images)
+│   ├── index.css                   # Global styles + animations
 │   └── App.jsx                     # Routes & auth protection
+├── public/images/                  # Static images (proposal cards, etc.)
+│   ├── proposal-card-*.png
+│   ├── inspiration-*.png
+│   └── seed-recipe-*.png
 ├── index.html
 └── package.json
 ```
@@ -93,7 +115,7 @@ proposals/{id}
 ├── type: "Wedding" | "Bachelorette" | "Quinceañera" | "Baby Shower" | "Fund Raiser"
 ├── typeColor: "#055e5a" // Tag color
 ├── eventName: "Jonathan & Amanda's Wedding Flowers"
-├── cardImage: "https://..." // Cover image (also first inspiration image)
+├── cardImage: "/images/proposal-card-1.png" // Local path
 ├── author: "Becky Memmo"
 ├── customerName: "Jonathan & Amanda Smith"
 ├── customerEmail: "email@example.com"
@@ -103,31 +125,10 @@ proposals/{id}
 ├── eventDate: Timestamp
 ├── deliveryDate: Timestamp
 ├── styleNotes: "Romantic garden theme..."
-├── inspirationImages: ["url1", "url2", ...] // 4-8 images
+├── inspirationImages: ["/images/...", ...] // 4-8 images
 ├── colorPalette: ["#f9e8cc", "#f5dbdd", ...] // 4-8 hex colors
-├── featuredBlooms: [
-│   {
-│     name: "Blue Tinted Roses",
-│     image: "https://...",
-│     selectedOption: 0,
-│     options: [
-│       { label: "5 Bunches", price: 164.99 },
-│       { label: "50 Stems", price: 279.99 }
-│     ]
-│   }
-│ ]
-├── recipes: [ // Professional only
-│   {
-│     id: "1",
-│     name: "Brides Bouquet",
-│     quantity: 1,
-│     image: "https://...",
-│     ingredients: [
-│       { name: "Quick Sandroses", count: "3" },
-│       { name: "Antique Mauve Fresh Cut Rose", count: "1" }
-│     ]
-│   }
-│ ]
+├── featuredBlooms: [...]
+├── recipes: [...] // Professional only
 ├── createdAt: Timestamp
 └── updatedAt: Timestamp
 ```
@@ -171,38 +172,6 @@ proposals/{id}
 
 ---
 
-## Product Search Implementation (Completed)
-
-The Featured Blooms search queries Shopify products via a Lambda proxy.
-
-### Lambda Function
-**Path**: `f50-aws-lambda/functions/search-products/index.js`
-
-```javascript
-// GET /search-products?q=query - Search products
-// GET /search-products/{handle} - Get product details
-```
-
-### Frontend Hook
-**Path**: `frontend/src/hooks/useProductSearch.jsx`
-
-```javascript
-const { searchProducts, getProduct, results, loading } = useProductSearch();
-
-// Search triggers on input change (debounced 300ms)
-searchProducts(query);
-
-// Get full product details when selected
-const product = await getProduct(handle);
-```
-
-### API Configuration
-**Path**: `frontend/src/lib/api.js`
-- Set `VITE_API_URL` env var to override the API base URL
-- BB Dev URL: `https://lte9x6yrn5.execute-api.us-east-1.amazonaws.com/Prod`
-
----
-
 ## Deployment
 
 ### Frontend (Firebase)
@@ -227,10 +196,12 @@ sam deploy --config-env bb-dev
 # Start frontend dev server
 cd frontend && npm run dev
 
-# Re-seed Firestore (use DevTools button in UI, or):
+# Re-seed Firestore (use DevTools button in UI)
 # 1. Open localhost:5173
 # 2. Click yellow "Dev Tools" panel (bottom-right)
-# 3. Click "Clear & Re-seed"
+# 3. Click "Seed DB" or "Clear DB"
+
+# Sign out clears session storage for fresh testing
 ```
 
 ---
@@ -261,7 +232,9 @@ cd frontend && npm run dev
 
 ---
 
-## Open Questions
+## Session Features
 
-1. **Save functionality**: Auto-save or manual save button?
-2. **PDF generation**: Which library? (react-pdf, puppeteer, etc.)
+- **Auto-save**: Changes save to Firestore after 1.5s of inactivity
+- **Session caching**: Proposals cached for 5 minutes to reduce reads
+- **Logout clears cache**: Sign out clears sessionStorage for fresh start
+- **Loading animation**: 1.2s minimum display in main content area
