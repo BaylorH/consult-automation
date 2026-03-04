@@ -1,6 +1,7 @@
 // Dashboard Page - Exact MCP Code from Call 1 (Node 1:7)
 // Main content area uses exact MCP code, sidebar uses Sidebar component
 
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
 const imgScreenshot20260118At41938Pm1 = "https://www.figma.com/api/mcp/asset/087828ad-c6c4-4c3f-b56e-9e750a20f19f";
@@ -17,6 +18,7 @@ const imgImage13 = "https://www.figma.com/api/mcp/asset/bc7a18cb-3e8e-4504-a923-
 const imgImage14 = "https://www.figma.com/api/mcp/asset/5d50eef7-8bb8-4a4c-a0bf-28d30230f486";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   return (
     <div className="bg-white content-stretch flex items-start relative size-full" data-name="Proposal Builder - Consultant - New Proposal" data-node-id="1:7">
       <div className="content-stretch flex flex-col gap-[30px] items-center py-[15px] relative shrink-0" data-node-id="1:6">
@@ -79,7 +81,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:600">
+                <div onClick={() => navigate('/proposal/1')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:600">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:601">
                     Edit
                   </p>
@@ -115,7 +117,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="29:782">
+                <div onClick={() => navigate('/proposal/2')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="29:782">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="29:783">
                     Edit
                   </p>
@@ -149,7 +151,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:702">
+                <div onClick={() => navigate('/proposal/3')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:702">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:703">
                     Edit
                   </p>
@@ -183,7 +185,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:734">
+                <div onClick={() => navigate('/proposal/4')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:734">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:735">
                     Edit
                   </p>
@@ -219,7 +221,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:726">
+                <div onClick={() => navigate('/proposal/5')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:726">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:727">
                     Edit
                   </p>
@@ -255,7 +257,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:718">
+                <div onClick={() => navigate('/proposal/6')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:718">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:719">
                     Edit
                   </p>
@@ -291,7 +293,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="28:710">
+                <div onClick={() => navigate('/proposal/7')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="28:710">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="28:711">
                     Edit
                   </p>
@@ -328,7 +330,7 @@ export default function Dashboard() {
                     View
                   </p>
                 </div>
-                <div className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0" data-node-id="29:767">
+                <div onClick={() => navigate('/proposal/8')} className="border border-[#999] border-solid content-stretch flex items-center justify-center px-[10px] py-[5px] relative shrink-0 cursor-pointer hover:bg-[#f3f5f6]" data-node-id="29:767">
                   <p className="font-['Avenir:Medium',sans-serif] leading-[normal] not-italic relative shrink-0 text-[12px] text-black whitespace-nowrap" data-node-id="29:768">
                     Edit
                   </p>

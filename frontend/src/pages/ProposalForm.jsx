@@ -1,7 +1,9 @@
 // ProposalForm Page - Exact MCP Code from Call 2 (Node 28:471)
 // Empty form state - uses exact MCP code
 
+import { useState } from 'react';
 import Sidebar from '../components/Sidebar';
+import ShoppingList from '../components/ShoppingList';
 
 const imgScreenshot20260118At41938Pm1 = "https://www.figma.com/api/mcp/asset/9ebaa3c8-5e57-405a-bf7d-798f38ce3e26";
 const imgScreenshot20260118At42723Pm1 = "https://www.figma.com/api/mcp/asset/671b6103-dfeb-4527-a6bc-fd16b8592eb5";
@@ -16,6 +18,26 @@ const imgPolygon2 = "https://www.figma.com/api/mcp/asset/f547a0f9-1163-4805-9b13
 const imgPolygon3 = "https://www.figma.com/api/mcp/asset/2b7c5d70-e223-4e04-ac8c-c4a616e6426d";
 
 export default function ProposalForm() {
+  const [formData, setFormData] = useState({
+    customerName: '',
+    customerEmail: '',
+    proposalName: '',
+    consultationLevel: 'Basic Consultation',
+    eventName: '',
+    proposalTemplate: 'Modern Wedding Consultation',
+    eventDate: '',
+    deliveryDate: '',
+    styleNotes: '',
+  });
+
+  const [recipes, setRecipes] = useState([]);
+
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isProfessional = formData.consultationLevel === 'Professional Consultation';
+
   return (
     <div className="bg-white content-stretch flex items-start relative size-full" data-name="Proposal Builder - Consultant - New Proposal" data-node-id="28:471">
       <div className="content-stretch flex flex-col gap-[30px] items-center py-[15px] relative shrink-0" data-node-id="28:472">
@@ -58,85 +80,107 @@ export default function ProposalForm() {
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:514">
                 Customer Name:
               </p>
-              <div className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full" data-node-id="28:515" />
+              <input
+                type="text"
+                value={formData.customerName}
+                onChange={(e) => updateField('customerName', e.target.value)}
+                className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full px-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none"
+                data-node-id="28:515"
+              />
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="134:1882">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="134:1883">
                 Customer Email:
               </p>
-              <div className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full" data-node-id="134:1884" />
+              <input
+                type="email"
+                value={formData.customerEmail}
+                onChange={(e) => updateField('customerEmail', e.target.value)}
+                className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full px-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none"
+                data-node-id="134:1884"
+              />
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="134:2">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="134:3">
                 Proposal Name:
               </p>
-              <div className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full" data-node-id="134:4" />
+              <input
+                type="text"
+                value={formData.proposalName}
+                onChange={(e) => updateField('proposalName', e.target.value)}
+                className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full px-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none"
+                data-node-id="134:4"
+              />
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="28:516">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:517">
                 Consultation Level:
               </p>
-              <div className="border border-[#ccc] border-solid content-stretch flex items-center p-[15px] relative shrink-0 w-full" data-node-id="28:518">
-                <p className="font-['Avenir:Roman',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[14px] w-[410px]" data-node-id="28:519">
-                  Basic Consultation
-                </p>
-                <div className="flex items-center justify-center relative shrink-0">
-                  <div className="flex-none rotate-180">
-                    <div className="relative size-[10px]" data-node-id="28:520">
-                      <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
-                        <img alt="" className="block max-w-none size-full" src={imgPolygon2} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <select
+                value={formData.consultationLevel}
+                onChange={(e) => updateField('consultationLevel', e.target.value)}
+                className="border border-[#ccc] border-solid h-[45px] p-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
+                data-node-id="28:518"
+              >
+                <option value="Basic Consultation">Basic Consultation</option>
+                <option value="Professional Consultation">Professional Consultation</option>
+              </select>
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="28:521">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:522">
                 Event Name:
               </p>
-              <div className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full" data-node-id="28:523" />
+              <input
+                type="text"
+                value={formData.eventName}
+                onChange={(e) => updateField('eventName', e.target.value)}
+                className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] shrink-0 w-full px-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none"
+                data-node-id="28:523"
+              />
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="28:524">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:525">
                 Proposal Template:
               </p>
-              <div className="border border-[#ccc] border-solid content-stretch flex items-center p-[15px] relative shrink-0 w-full" data-node-id="28:526">
-                <p className="font-['Avenir:Roman',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[14px] w-[410px]" data-node-id="28:527">
-                  Modern Wedding Consultation
-                </p>
-                <div className="flex items-center justify-center relative shrink-0">
-                  <div className="flex-none rotate-180">
-                    <div className="relative size-[10px]" data-node-id="28:528">
-                      <div className="absolute bottom-1/4 left-[6.7%] right-[6.7%] top-0">
-                        <img alt="" className="block max-w-none size-full" src={imgPolygon2} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <select
+                value={formData.proposalTemplate}
+                onChange={(e) => updateField('proposalTemplate', e.target.value)}
+                className="border border-[#ccc] border-solid h-[45px] p-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
+                data-node-id="28:526"
+              >
+                <option value="Modern Wedding Consultation">Modern Wedding Consultation</option>
+                <option value="Classic Wedding Consultation">Classic Wedding Consultation</option>
+                <option value="Baby Shower Consultation">Baby Shower Consultation</option>
+                <option value="Quinceañera Consultation">Quinceañera Consultation</option>
+                <option value="Fund Raiser Consultation">Fund Raiser Consultation</option>
+              </select>
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="28:529">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:530">
                 Event Date:
               </p>
-              <div className="border border-[#ccc] border-solid content-stretch flex flex-col items-end justify-center px-[10px] py-[12px] relative shrink-0 w-full" data-node-id="28:531">
-                <div className="opacity-50 relative shrink-0 size-[20px]" data-name="image 1" data-node-id="28:532">
-                  <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage1} />
-                </div>
-              </div>
+              <input
+                type="date"
+                value={formData.eventDate}
+                onChange={(e) => updateField('eventDate', e.target.value)}
+                className="border border-[#ccc] border-solid h-[45px] px-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none cursor-pointer"
+                data-node-id="28:531"
+              />
             </div>
             <div className="content-stretch flex flex-col gap-[5px] items-start relative shrink-0 w-[450px]" data-node-id="28:533">
               <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:534">
                 Delivery Date:
               </p>
-              <div className="border border-[#ccc] border-solid content-stretch flex flex-col items-end justify-center px-[10px] py-[12px] relative shrink-0 w-full" data-node-id="28:535">
-                <div className="opacity-50 relative shrink-0 size-[20px]" data-name="image 1" data-node-id="28:536">
-                  <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage1} />
-                </div>
-              </div>
+              <input
+                type="date"
+                value={formData.deliveryDate}
+                onChange={(e) => updateField('deliveryDate', e.target.value)}
+                className="border border-[#ccc] border-solid h-[45px] px-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none cursor-pointer"
+                data-node-id="28:535"
+              />
             </div>
           </div>
+          {isProfessional && (
           <div className="bg-white border border-[#eef0ef] border-solid content-start flex flex-wrap gap-[30px] items-start p-[30px] relative rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)] shrink-0 w-full" data-name="Inspiration & Style" data-node-id="28:537">
             <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] w-[960px]" data-node-id="28:538">{`Inspiration & Style`}</p>
             <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-[930px]" data-node-id="28:540">
@@ -210,10 +254,16 @@ export default function ProposalForm() {
                 <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[12px] uppercase w-[157.548px]" data-node-id="28:568">
                   Style Notes
                 </p>
-                <div className="border border-[rgba(204,204,204,0.93)] border-solid h-[130px] rounded-[5px] shrink-0 w-full" data-node-id="28:569" />
+                <textarea
+                  value={formData.styleNotes}
+                  onChange={(e) => updateField('styleNotes', e.target.value)}
+                  className="border border-[rgba(204,204,204,0.93)] border-solid h-[130px] rounded-[5px] shrink-0 w-full p-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none resize-none"
+                  data-node-id="28:569"
+                />
               </div>
             </div>
           </div>
+          )}
           <div className="bg-white border border-[#eef0ef] border-solid content-start flex flex-wrap gap-[30px] items-start p-[30px] relative rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)] shrink-0 w-full" data-name="Featured Blooms" data-node-id="28:570">
             <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] w-[960px]" data-node-id="28:571">
               Featured Blooms
@@ -253,6 +303,7 @@ export default function ProposalForm() {
               </div>
             </div>
           </div>
+          {isProfessional && (
           <div className="bg-white border border-[#eef0ef] border-solid content-start flex flex-wrap gap-[30px] items-start p-[30px] relative rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)] shrink-0 w-full" data-name="Custom Floral Recipes" data-node-id="28:583">
             <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] w-[960px]" data-node-id="28:584">
               Custom Floral Recipes
@@ -266,6 +317,10 @@ export default function ProposalForm() {
               </p>
             </div>
           </div>
+          )}
+          {recipes.length > 0 ? (
+            <ShoppingList />
+          ) : (
           <div className="bg-white border border-[#eef0ef] border-solid content-stretch flex flex-col gap-[30px] items-start p-[30px] relative rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)] shrink-0 w-full" data-name="Shopping List" data-node-id="28:588">
             <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] w-[960px]" data-node-id="28:589">
               Shopping List
@@ -277,6 +332,7 @@ export default function ProposalForm() {
               <p className="font-['Avenir:Roman',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#666] text-[16px] whitespace-pre" data-node-id="28:592">{`│ Your shopping list will appear once you add recipes.         │`}</p>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
