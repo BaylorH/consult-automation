@@ -56,6 +56,14 @@ export default function ProposalFormContent() {
   const bloomSearchRef = useRef(null);
   const { searchProducts, getProduct, results: searchResults, loading: searchLoading, clearResults } = useProductSearch();
 
+  // Inspiration & Style state
+  const [showImageUrlInput, setShowImageUrlInput] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [newColor, setNewColor] = useState('#ffffff');
+  const imageInputRef = useRef(null);
+  const colorInputRef = useRef(null);
+
   // Populate form when proposal data loads
   useEffect(() => {
     if (proposal) {
@@ -200,6 +208,56 @@ export default function ProposalFormContent() {
     setFeaturedBlooms(prev => prev.map((bloom, i) =>
       i === bloomIndex ? { ...bloom, selectedOption: optionIndex } : bloom
     ));
+  };
+
+  // Inspiration Images handlers
+  const handleAddImage = () => {
+    if (inspirationImages.length >= 8) return;
+    setShowImageUrlInput(true);
+    setNewImageUrl('');
+    // Focus the input after it renders
+    setTimeout(() => imageInputRef.current?.focus(), 100);
+  };
+
+  const handleSaveImage = () => {
+    if (newImageUrl.trim() && inspirationImages.length < 8) {
+      setInspirationImages(prev => [...prev, newImageUrl.trim()]);
+      setNewImageUrl('');
+      setShowImageUrlInput(false);
+    }
+  };
+
+  const handleCancelImage = () => {
+    setNewImageUrl('');
+    setShowImageUrlInput(false);
+  };
+
+  const handleRemoveImage = (index) => {
+    setInspirationImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Color Palette handlers
+  const handleAddColor = () => {
+    if (colorPalette.length >= 8) return;
+    setShowColorPicker(true);
+    setNewColor('#ffffff');
+  };
+
+  const handleSaveColor = () => {
+    if (newColor && colorPalette.length < 8) {
+      setColorPalette(prev => [...prev, newColor]);
+      setNewColor('#ffffff');
+      setShowColorPicker(false);
+    }
+  };
+
+  const handleCancelColor = () => {
+    setNewColor('#ffffff');
+    setShowColorPicker(false);
+  };
+
+  const handleRemoveColor = (index) => {
+    setColorPalette(prev => prev.filter((_, i) => i !== index));
   };
 
   // Close search results when clicking outside
@@ -373,17 +431,27 @@ export default function ProposalFormContent() {
             <div className="flex flex-wrap gap-[30px] pb-[15px]">
               {/* Show existing images */}
               {inspirationImages.map((imgUrl, index) => (
-                <div key={index} className="overflow-hidden size-[142px]">
+                <div key={index} className="relative group overflow-hidden size-[142px]">
                   <img
                     alt={`Inspiration ${index + 1}`}
                     className="object-cover size-full"
                     src={imgUrl}
                   />
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm font-bold"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
               {/* Show empty placeholder slots only if we have fewer than 4 images */}
               {Array.from({ length: emptyImageSlots }).map((_, i) => (
-                <div key={`empty-${i}`} className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]">
+                <div
+                  key={`empty-${i}`}
+                  onClick={handleAddImage}
+                  className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
+                >
                   <div className="opacity-50 size-[40px]">
                     <img alt="" className="max-w-none object-cover size-full" src={imgRectangle9} />
                   </div>
@@ -394,7 +462,10 @@ export default function ProposalFormContent() {
               ))}
               {/* Show Add button if we have 4+ images but less than 8 */}
               {inspirationImages.length >= 4 && showAddImageButton && (
-                <div className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]">
+                <div
+                  onClick={handleAddImage}
+                  className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
+                >
                   <div className="opacity-50 size-[40px]">
                     <img alt="" className="max-w-none object-cover size-full" src={imgRectangle9} />
                   </div>
@@ -403,24 +474,64 @@ export default function ProposalFormContent() {
                   </p>
                 </div>
               )}
+              {/* Image URL Input Modal */}
+              {showImageUrlInput && (
+                <div className="border border-[#ccc] border-solid flex flex-col gap-[10px] p-[15px] rounded-[5px] w-[300px]">
+                  <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[12px]">Enter Image URL</p>
+                  <input
+                    ref={imageInputRef}
+                    type="text"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveImage()}
+                    placeholder="https://..."
+                    className="border border-[#ccc] border-solid px-[10px] py-[8px] text-[14px] outline-none"
+                  />
+                  <div className="flex gap-[10px]">
+                    <button
+                      onClick={handleSaveImage}
+                      className="bg-[#4a9380] text-white px-[15px] py-[5px] text-[12px] rounded"
+                    >
+                      Add
+                    </button>
+                    <button
+                      onClick={handleCancelImage}
+                      className="border border-[#ccc] px-[15px] py-[5px] text-[12px] rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex gap-[30px] w-full">
             <div className="flex flex-col gap-[10px] flex-1">
               <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase whitespace-pre-wrap">{`Color Pallette  (Min 4, 8 max)`}</p>
-              <div className="flex flex-wrap gap-[30px]">
+              <div className="flex flex-wrap gap-[30px] items-center">
                 {/* Show existing colors */}
                 {colorPalette.map((color, index) => (
-                  <div
-                    key={index}
-                    className="border border-[#ccc] border-solid rounded-full size-[60px]"
-                    style={{ backgroundColor: color }}
-                  />
+                  <div key={index} className="relative group">
+                    <div
+                      className="border border-[#ccc] border-solid rounded-full size-[60px]"
+                      style={{ backgroundColor: color }}
+                    />
+                    <button
+                      onClick={() => handleRemoveColor(index)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
                 {/* Show empty placeholder slots only if we have fewer than 4 colors */}
                 {Array.from({ length: emptyColorSlots }).map((_, i) => (
-                  <div key={`empty-color-${i}`} className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]">
+                  <div
+                    key={`empty-color-${i}`}
+                    onClick={handleAddColor}
+                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
+                  >
                     <div className="size-[40px]">
                       <img alt="" className="max-w-none object-cover opacity-50 size-full" src={imgImage6} />
                     </div>
@@ -428,9 +539,48 @@ export default function ProposalFormContent() {
                 ))}
                 {/* Show Add button if we have 4+ colors but less than 8 */}
                 {colorPalette.length >= 4 && showAddColorButton && (
-                  <div className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]">
+                  <div
+                    onClick={handleAddColor}
+                    className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
+                  >
                     <div className="size-[40px]">
                       <img alt="" className="max-w-none object-cover opacity-50 size-full" src={imgImage6} />
+                    </div>
+                  </div>
+                )}
+                {/* Color Picker */}
+                {showColorPicker && (
+                  <div className="border border-[#ccc] border-solid flex flex-col gap-[10px] p-[15px] rounded-[5px]">
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[12px]">Pick a Color</p>
+                    <div className="flex gap-[10px] items-center">
+                      <input
+                        ref={colorInputRef}
+                        type="color"
+                        value={newColor}
+                        onChange={(e) => setNewColor(e.target.value)}
+                        className="w-[50px] h-[40px] cursor-pointer border-none"
+                      />
+                      <input
+                        type="text"
+                        value={newColor}
+                        onChange={(e) => setNewColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="border border-[#ccc] border-solid px-[10px] py-[5px] text-[12px] w-[80px] outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-[10px]">
+                      <button
+                        onClick={handleSaveColor}
+                        className="bg-[#4a9380] text-white px-[15px] py-[5px] text-[12px] rounded"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={handleCancelColor}
+                        className="border border-[#ccc] px-[15px] py-[5px] text-[12px] rounded"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}
