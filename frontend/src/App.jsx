@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
@@ -6,6 +7,9 @@ import LoadingScreen from './components/LoadingScreen';
 import DashboardContent from './pages/DashboardContent';
 import ProposalFormContent from './pages/ProposalFormContent';
 import DevTools from './components/DevTools';
+
+// Minimum time to show loading screen (ms)
+const MIN_LOADING_TIME = 1200;
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -22,9 +26,25 @@ function ProtectedRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
-  if (loading) {
+  // Start minimum loading timer on mount
+  useEffect(() => {
+    if (!hasStartedLoading) {
+      setHasStartedLoading(true);
+      const timer = setTimeout(() => {
+        setMinTimeElapsed(true);
+      }, MIN_LOADING_TIME);
+      return () => clearTimeout(timer);
+    }
+  }, [hasStartedLoading]);
+
+  // Show loading screen until BOTH auth is done AND minimum time has passed
+  const showLoading = authLoading || !minTimeElapsed;
+
+  if (showLoading) {
     return <LoadingScreen />;
   }
 
