@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import Layout from './components/Layout';
+import LoadingScreen from './components/LoadingScreen';
 import DashboardContent from './pages/DashboardContent';
 import ProposalFormContent from './pages/ProposalFormContent';
 import DevTools from './components/DevTools';
@@ -10,11 +11,7 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f3f5f6]">
-        <div className="text-[#666]">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!user) {
@@ -28,11 +25,7 @@ function AppRoutes() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f3f5f6]">
-        <div className="text-[#666]">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
