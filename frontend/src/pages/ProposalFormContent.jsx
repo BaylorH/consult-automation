@@ -320,6 +320,25 @@ export default function ProposalFormContent() {
     ));
   };
 
+  // Delete proposal handler
+  const handleDeleteProposal = async () => {
+    if (!proposalId) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this proposal? This action cannot be undone.'
+    );
+
+    if (confirmed) {
+      try {
+        await proposalService.delete(proposalId);
+        navigate('/');
+      } catch (err) {
+        console.error('Error deleting proposal:', err);
+        alert('Failed to delete proposal. Please try again.');
+      }
+    }
+  };
+
   // Inspiration Images handlers
   const handleAddImage = () => {
     if (inspirationImages.length >= 8) return;
@@ -525,19 +544,31 @@ export default function ProposalFormContent() {
         <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
           {isNewProposal && !proposalId ? 'Proposal Builder > New Proposal' : 'Proposal Builder > Edit Proposal'}
         </p>
-        <div className="flex items-center gap-[8px]">
-          {saveStatus === 'saving' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">Saving...</span>
+        <div className="flex items-center gap-[15px]">
+          {/* Delete Button - only show for saved proposals */}
+          {proposalId && (
+            <button
+              onClick={handleDeleteProposal}
+              className="font-['Avenir:Medium',sans-serif] text-[12px] text-[#999] hover:text-[#e74c3c] cursor-pointer transition-colors"
+            >
+              Delete Proposal
+            </button>
           )}
-          {saveStatus === 'saved' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[12px]">Saved</span>
-          )}
-          {saveStatus === 'unsaved' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#f5a623] text-[12px]">Unsaved changes</span>
-          )}
-          {saveStatus === 'error' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">Save failed</span>
-          )}
+          {/* Save Status */}
+          <div className="flex items-center gap-[8px]">
+            {saveStatus === 'saving' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">Saving...</span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[12px]">Saved</span>
+            )}
+            {saveStatus === 'unsaved' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#f5a623] text-[12px]">Unsaved changes</span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">Save failed</span>
+            )}
+          </div>
         </div>
       </div>
 
