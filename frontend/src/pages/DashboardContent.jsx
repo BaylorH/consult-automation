@@ -2,9 +2,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useProposals } from '../hooks/useProposals';
 
-const imgImage7 = "https://www.figma.com/api/mcp/asset/f55a3330-8e8f-4469-a0ad-1953d62f9973";
-const imgImage3 = "https://www.figma.com/api/mcp/asset/75c7788f-baec-4845-b1ca-d562f48e9e1d";
-const imgImage4 = "https://www.figma.com/api/mcp/asset/ce0fd175-39ad-4c31-b6e8-79abaf5373b2";
+// Inline SVG icon (no network request, instant load)
+const InfoIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#666]">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 8v4M12 16h.01" />
+  </svg>
+);
 
 export default function DashboardContent() {
   const navigate = useNavigate();
@@ -25,28 +29,10 @@ export default function DashboardContent() {
   return (
     <div className="flex flex-col gap-[15px] p-[15px] pb-[30px]">
       {/* Header */}
-      <div className="flex gap-[10px] items-center justify-between px-[15px] py-[15px]">
+      <div className="flex gap-[10px] items-center px-[15px] py-[15px]">
         <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
           Proposals
         </p>
-        <div className="flex gap-[10px]">
-          <div className="bg-[rgba(238,238,238,0.93)] border border-[#ccc] border-solid flex gap-[5px] items-center justify-center p-[5px]">
-            <div className="relative size-[20px]">
-              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage7} />
-            </div>
-            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] whitespace-nowrap">
-              Share Proposal
-            </p>
-          </div>
-          <div className="bg-[rgba(238,238,238,0.93)] border border-[#ccc] border-solid flex gap-[5px] items-center justify-center p-[5px]">
-            <div className="relative size-[15px]">
-              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage3} />
-            </div>
-            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] whitespace-nowrap">
-              Save Proposal
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Main Content Card */}
@@ -71,7 +57,7 @@ export default function DashboardContent() {
           {!loading && !error && proposals.length === 0 && (
             <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
               <div className="size-[20px]">
-                <img alt="" className="max-w-none object-cover size-full" src={imgImage4} />
+                <InfoIcon />
               </div>
               <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
                 No proposals yet. Click "Create New Proposal" to get started.

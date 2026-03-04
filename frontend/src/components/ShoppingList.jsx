@@ -1,7 +1,9 @@
 // Shopping List Component - Exact MCP Code from Call 5 (Node 20:332)
 // Standalone component for when recipes exist
 
-const imgScreenshot20260118At112847Pm1 = "https://www.figma.com/api/mcp/asset/3e9546e9-d09e-45d7-ba76-7243a20a33fd";
+// Local assets (bundled, instant load)
+import shoppingListIcon from '../assets/images/shopping-list-icon.png';
+const imgScreenshot20260118At112847Pm1 = shoppingListIcon;
 
 export default function ShoppingList() {
   return (

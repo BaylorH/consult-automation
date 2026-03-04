@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   collection,
   doc,
@@ -14,6 +14,38 @@ import {
 import { db } from '../lib/firebase';
 
 const COLLECTION_NAME = 'proposals';
+const CACHE_PREFIX = 'proposal_cache_';
+const CACHE_LIST_KEY = 'proposals_list_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Session storage helpers
+const getCache = (key) => {
+  try {
+    const cached = sessionStorage.getItem(key);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const setCache = (key, data) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // Session storage full or unavailable
+  }
+};
+
+const invalidateCache = (id) => {
+  sessionStorage.removeItem(CACHE_LIST_KEY);
+  if (id) sessionStorage.removeItem(CACHE_PREFIX + id);
+};
 
 // Hook to fetch all proposals (for dashboard)
 export function useProposals() {
@@ -21,33 +53,47 @@ export function useProposals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchProposals = async () => {
-      try {
-        setLoading(true);
-        const q = query(
-          collection(db, COLLECTION_NAME),
-          orderBy('updatedAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setProposals(data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching proposals:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchProposals = useCallback(async (skipCache = false) => {
+    try {
+      // Check cache first
+      if (!skipCache) {
+        const cached = getCache(CACHE_LIST_KEY);
+        if (cached) {
+          setProposals(cached);
+          setLoading(false);
+          return;
+        }
       }
-    };
 
-    fetchProposals();
+      setLoading(true);
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        orderBy('updatedAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setProposals(data);
+      setCache(CACHE_LIST_KEY, data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching proposals:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { proposals, loading, error };
+  useEffect(() => {
+    fetchProposals();
+  }, [fetchProposals]);
+
+  // Refresh function to force re-fetch
+  const refresh = useCallback(() => fetchProposals(true), [fetchProposals]);
+
+  return { proposals, loading, error, refresh };
 }
 
 // Hook to fetch a single proposal by ID (for edit form)
@@ -65,12 +111,22 @@ export function useProposal(id) {
 
     const fetchProposal = async () => {
       try {
+        // Check cache first
+        const cached = getCache(CACHE_PREFIX + id);
+        if (cached) {
+          setProposal(cached);
+          setLoading(false);
+          return;
+        }
+
         setLoading(true);
         const docRef = doc(db, COLLECTION_NAME, id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProposal({ id: docSnap.id, ...docSnap.data() });
+          const data = { id: docSnap.id, ...docSnap.data() };
+          setProposal(data);
+          setCache(CACHE_PREFIX + id, data);
           setError(null);
         } else {
           setError('Proposal not found');
@@ -99,6 +155,7 @@ export const proposalService = {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    invalidateCache(); // Clear list cache
     return docRef.id;
   },
 
@@ -109,11 +166,18 @@ export const proposalService = {
       ...data,
       updatedAt: serverTimestamp()
     });
+    invalidateCache(id); // Clear both list and specific proposal cache
+    // Update the cache with new data immediately
+    const cached = getCache(CACHE_PREFIX + id);
+    if (cached) {
+      setCache(CACHE_PREFIX + id, { ...cached, ...data, updatedAt: new Date() });
+    }
   },
 
   // Delete a proposal
   async delete(id) {
     const docRef = doc(db, COLLECTION_NAME, id);
     await deleteDoc(docRef);
+    invalidateCache(id);
   }
 };

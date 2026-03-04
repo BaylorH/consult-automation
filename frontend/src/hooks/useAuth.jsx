@@ -1,6 +1,7 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
+import { celebrateWithFlowers } from '../utils/celebrate';
 
 const AuthContext = createContext(null);
 
@@ -8,14 +9,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isNewLogin = useRef(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
         // Verify domain
-        if (user.email?.endsWith('@fiftyflowers.com')) {
-          setUser(user);
+        if (firebaseUser.email?.endsWith('@fiftyflowers.com')) {
+          setUser(firebaseUser);
           setError(null);
+          // Trigger celebration only on fresh login, not page refresh
+          if (isNewLogin.current) {
+            celebrateWithFlowers(50);
+            isNewLogin.current = false;
+          }
         } else {
           // Sign out if not from allowed domain
           signOut(auth);
@@ -34,9 +41,11 @@ export function AuthProvider({ children }) {
   const login = async () => {
     try {
       setError(null);
+      isNewLogin.current = true;
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       setError(err.message);
+      isNewLogin.current = false;
     }
   };
 

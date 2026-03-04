@@ -13,6 +13,34 @@ const TYPE_COLORS = {
   'Fund Raiser': '#8b5cf6',
 };
 
+// Local image paths (served from public folder)
+const IMAGES = {
+  proposalCards: {
+    card1: '/images/proposal-card-1.png',
+    card2: '/images/proposal-card-2.png',
+    card3: '/images/proposal-card-3.png',
+    card4: '/images/proposal-card-4.png',
+    card5: '/images/proposal-card-5.png',
+    card6: '/images/proposal-card-6.png',
+    card7: '/images/proposal-card-7.png',
+    card8: '/images/proposal-card-8.png',
+  },
+  inspiration: {
+    img1: '/images/inspiration-1.png',
+    img2: '/images/inspiration-2.png',
+    img3: '/images/inspiration-3.png',
+  },
+  recipes: {
+    recipe1: '/images/seed-recipe-1.png',
+    recipe2: '/images/seed-recipe-2.png',
+    recipe3: '/images/seed-recipe-3.png',
+    recipe4: '/images/seed-recipe-4.png',
+    recipe5: '/images/seed-recipe-5.png',
+    recipe6: '/images/seed-recipe-6.png',
+    recipe7: '/images/seed-recipe-7.png',
+  },
+};
+
 // Sample proposals matching the dashboard mockup
 export const sampleProposals = [
   {
@@ -20,7 +48,7 @@ export const sampleProposals = [
     type: 'Wedding',
     typeColor: TYPE_COLORS['Wedding'],
     eventName: 'Jonathan & Amandas Wedding Flowers',
-    cardImage: 'https://www.figma.com/api/mcp/asset/cd315ad4-2c3a-42b2-9275-48274563c445',
+    cardImage: IMAGES.proposalCards.card1,
     author: 'Becky Memmo',
 
     // Form fields - FULLY FILLED OUT (reference proposal) - PROFESSIONAL
@@ -33,22 +61,22 @@ export const sampleProposals = [
     deliveryDate: Timestamp.fromDate(new Date('2026-03-16')),
     styleNotes: 'Romantic garden theme with soft pastels. Bride loves peonies and garden roses. Ceremony will be outdoors in a vineyard setting.',
 
-    // Inspiration images (from Figma MCP) - cardImage is first/cover image
+    // Inspiration images - cardImage is first/cover image
     inspirationImages: [
-      'https://www.figma.com/api/mcp/asset/cd315ad4-2c3a-42b2-9275-48274563c445', // cardImage/cover
-      'https://www.figma.com/api/mcp/asset/150bd0b9-1c6d-48e2-82d9-1e4cd77bb1ce',
-      'https://www.figma.com/api/mcp/asset/8de135ac-4c96-424e-9e6b-ba805762fed6',
-      'https://www.figma.com/api/mcp/asset/1a15fd2d-c784-4e5c-8829-ff60a52fefd4',
+      IMAGES.proposalCards.card1,
+      IMAGES.inspiration.img1,
+      IMAGES.inspiration.img2,
+      IMAGES.inspiration.img3,
     ],
 
-    // Color palette (from Figma MCP)
+    // Color palette
     colorPalette: ['#f9e8cc', '#f5dbdd', '#fef8df', '#97cce8', '#cee5cb', '#ef865b'],
 
-    // Featured blooms for Professional consultation (from Figma MCP)
+    // Featured blooms for Professional consultation
     featuredBlooms: [
       {
         name: 'Blue Tinted Roses',
-        image: 'https://www.figma.com/api/mcp/asset/19064288-7b83-4ff6-a6b5-1e13aab441cc',
+        image: IMAGES.recipes.recipe1,
         selectedOption: 0,
         options: [
           { label: '5 Bunches', price: 164.99 },
@@ -58,7 +86,7 @@ export const sampleProposals = [
       },
       {
         name: 'Creamy White Bulk Spray Roses',
-        image: 'https://www.figma.com/api/mcp/asset/9e870d1a-f9b6-4ca2-b79b-29412df8d8f8',
+        image: IMAGES.recipes.recipe2,
         selectedOption: 0,
         options: [
           { label: '20 Stems', price: 119.99 },
@@ -68,7 +96,7 @@ export const sampleProposals = [
       },
       {
         name: 'Silver Dollar Eucalyptus Greens',
-        image: 'https://www.figma.com/api/mcp/asset/eac566f3-fad3-4ae4-be93-e7f2a652cc08',
+        image: IMAGES.recipes.recipe3,
         selectedOption: 0,
         options: [
           { label: '20 Bunches', price: 119.99 },
@@ -79,13 +107,13 @@ export const sampleProposals = [
       },
     ],
 
-    // Custom floral recipes for Professional consultation (from Figma MCP)
+    // Custom floral recipes for Professional consultation
     recipes: [
       {
         id: '1',
         name: 'Brides Bouquet',
         quantity: 1,
-        image: 'https://www.figma.com/api/mcp/asset/f00fd4b2-0ab3-481e-91d1-66a201f0abce',
+        image: IMAGES.recipes.recipe4,
         ingredients: [
           { name: 'Quick Sandroses', count: '3' },
           { name: 'Antique Mauve Fresh Cut Rose', count: '1' },
@@ -97,7 +125,7 @@ export const sampleProposals = [
         id: '2',
         name: 'Bridesmaid Bouquet',
         quantity: 4,
-        image: 'https://www.figma.com/api/mcp/asset/daa9bbf9-a026-454e-89a4-b541f24a9f6f',
+        image: IMAGES.recipes.recipe5,
         ingredients: [
           { name: 'Quick Sandroses', count: '3' },
           { name: 'Antique Mauve Fresh Cut Rose', count: '1' },
@@ -109,7 +137,7 @@ export const sampleProposals = [
         id: '3',
         name: 'Groomsmen Boutonniere',
         quantity: 4,
-        image: 'https://www.figma.com/api/mcp/asset/851c9feb-0c60-4d54-ac1b-538360ee1b9f',
+        image: IMAGES.recipes.recipe6,
         ingredients: [
           { name: 'Quick Sandroses', count: '1' },
           { name: 'Gunnii Eucalyptus Greens', count: '1/4' },
@@ -119,7 +147,7 @@ export const sampleProposals = [
         id: '4',
         name: 'Officiant Boutonniere',
         quantity: 1,
-        image: 'https://www.figma.com/api/mcp/asset/851c9feb-0c60-4d54-ac1b-538360ee1b9f',
+        image: IMAGES.recipes.recipe6,
         ingredients: [
           { name: 'Quick Sandroses', count: '1' },
           { name: 'Gunnii Eucalyptus Greens', count: '1/4' },
@@ -129,7 +157,7 @@ export const sampleProposals = [
         id: '5',
         name: 'Centerpiece Arrangement',
         quantity: 10,
-        image: 'https://www.figma.com/api/mcp/asset/5e2cc6c1-7046-43fe-9c63-f9d3a95a942f',
+        image: IMAGES.recipes.recipe7,
         ingredients: [
           { name: 'Quick Sandroses', count: '3' },
           { name: 'Antique Mauve Fresh Cut Rose', count: '1' },
@@ -146,7 +174,7 @@ export const sampleProposals = [
     type: 'Bachelorette',
     typeColor: TYPE_COLORS['Bachelorette'],
     eventName: "Brittany's Bachelorette Weekend",
-    cardImage: 'https://www.figma.com/api/mcp/asset/1ca91548-dda3-4d97-982b-952d863e69a6',
+    cardImage: IMAGES.proposalCards.card2,
     author: 'Becky Memmo',
 
     customerName: 'Brittany Johnson',
@@ -167,7 +195,7 @@ export const sampleProposals = [
     type: 'Wedding',
     typeColor: TYPE_COLORS['Wedding'],
     eventName: "Callum & Jackie's Wedding Flowers",
-    cardImage: 'https://www.figma.com/api/mcp/asset/6c4108f1-39a0-4e9c-9323-23b67aaae990',
+    cardImage: IMAGES.proposalCards.card3,
     author: 'Cynthia Paz',
 
     customerName: 'Callum & Jackie Williams',
@@ -188,7 +216,7 @@ export const sampleProposals = [
     type: 'Quinceeanera',
     typeColor: TYPE_COLORS['Quinceeanera'],
     eventName: "Tiffany Garcia's 15 Birthday",
-    cardImage: 'https://www.figma.com/api/mcp/asset/e2c6e9ed-17d1-42de-848c-e9c03958fbae',
+    cardImage: IMAGES.proposalCards.card4,
     author: 'Becky Memmo',
 
     customerName: 'Maria Garcia (Mother)',
@@ -209,7 +237,7 @@ export const sampleProposals = [
     type: 'Wedding',
     typeColor: TYPE_COLORS['Wedding'],
     eventName: 'Kowalski Wedding Ceremony',
-    cardImage: 'https://www.figma.com/api/mcp/asset/c73da2b9-f214-4456-8e7b-657c00b9d0f1',
+    cardImage: IMAGES.proposalCards.card5,
     author: 'Adelena Whittaker',
 
     customerName: 'Michael & Sarah Kowalski',
@@ -230,7 +258,7 @@ export const sampleProposals = [
     type: 'Wedding',
     typeColor: TYPE_COLORS['Wedding'],
     eventName: 'Beth Goldstein Tropical Wedding',
-    cardImage: 'https://www.figma.com/api/mcp/asset/2a79e4d7-51da-40d0-968f-73e270b863cf',
+    cardImage: IMAGES.proposalCards.card6,
     author: 'Mari Ramos',
 
     customerName: 'Beth & David Goldstein',
@@ -251,7 +279,7 @@ export const sampleProposals = [
     type: 'Wedding',
     typeColor: TYPE_COLORS['Wedding'],
     eventName: 'Patels Traditional Wedding',
-    cardImage: 'https://www.figma.com/api/mcp/asset/bc7a18cb-3e8e-4504-a923-752bade2a7ae',
+    cardImage: IMAGES.proposalCards.card7,
     author: 'Adelena Whittaker',
 
     customerName: 'Raj & Priya Patel',
@@ -272,7 +300,7 @@ export const sampleProposals = [
     type: 'Baby Shower',
     typeColor: TYPE_COLORS['Baby Shower'],
     eventName: 'Singer Modern Baby Shower',
-    cardImage: 'https://www.figma.com/api/mcp/asset/5d50eef7-8bb8-4a4c-a0bf-28d30230f486',
+    cardImage: IMAGES.proposalCards.card8,
     author: 'Camille Lemons',
 
     customerName: 'Jessica Singer',

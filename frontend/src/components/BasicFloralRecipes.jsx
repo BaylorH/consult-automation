@@ -1,12 +1,13 @@
 // BasicFloralRecipes Component - Exact MCP Code from Call 4 (Node 134:915)
 // Shows pre-made recipe template cards for Basic Consultation tier
 
-const imgBrideBouquet = "https://www.figma.com/api/mcp/asset/7a2e0af0-36a5-4a89-af08-6ef79efbee87";
-const imgBouquet = "https://www.figma.com/api/mcp/asset/7bdb5764-281f-462c-8019-d834544a7647";
-const imgBoutonniere1 = "https://www.figma.com/api/mcp/asset/10401a95-96e6-4fac-a925-6c420a5809af";
-const imgCorsage = "https://www.figma.com/api/mcp/asset/f73ed2ba-fc4a-462c-bad7-9e0678b01c81";
-const imgCenterpiece = "https://www.figma.com/api/mcp/asset/19c72b7f-89d6-4281-8d2a-3ab7dc80d45c";
-const imgFrame1 = "https://www.figma.com/api/mcp/asset/f02be32e-df2f-4674-a315-75bcc08ed7ca";
+// Local assets (bundled, instant load)
+import imgBrideBouquet from '../assets/images/recipe-bride-bouquet.png';
+import imgBouquet from '../assets/images/recipe-bouquet.png';
+import imgBoutonniere1 from '../assets/images/recipe-boutonniere.png';
+import imgCorsage from '../assets/images/recipe-corsage.png';
+import imgCenterpiece from '../assets/images/recipe-centerpiece.png';
+import imgFrame1 from '../assets/images/recipe-frame.png';
 
 function RecipeCard({ image, name, ingredients }) {
   return (

@@ -1,18 +1,46 @@
 // ProposalFormContent - Main content only (Layout provides sidebar)
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import ShoppingList from '../components/ShoppingList';
 import BasicFloralRecipes from '../components/BasicFloralRecipes';
-import { useProposal } from '../hooks/useProposals';
+import { useProposal, proposalService } from '../hooks/useProposals';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
 
-const imgImage7 = "https://www.figma.com/api/mcp/asset/3d26f03c-a823-49a8-9b70-b5c4f99cef81";
-const imgImage3 = "https://www.figma.com/api/mcp/asset/306f85a0-2700-4e8f-9d25-280ee09ad142";
-const imgRectangle9 = "https://www.figma.com/api/mcp/asset/bc565399-8be4-4097-8073-dd8867d8524e";
-const imgImage6 = "https://www.figma.com/api/mcp/asset/36dac031-44a8-4379-988c-de85b8230c3a";
-const imgImage4 = "https://www.figma.com/api/mcp/asset/ce0fd175-39ad-4c31-b6e8-79abaf5373b2";
-const imgScreenshot20260118At111910Pm1 = "https://www.figma.com/api/mcp/asset/d2a7295e-4cb5-4fee-a8bf-bd654c722bf3";
-const imgPolygon3 = "https://www.figma.com/api/mcp/asset/2b7c5d70-e223-4e04-ac8c-c4a616e6426d";
+// Inline SVG icons (no network requests, instant load)
+const ImageIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#999]">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path d="M21 15l-5-5L5 21" />
+  </svg>
+);
+
+const ColorIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#999]">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+  </svg>
+);
+
+const InfoIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-full text-[#666]">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 8v4M12 16h.01" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-full text-[#999]">
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.35-4.35" />
+  </svg>
+);
+
+const ChevronIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="size-full text-[#666]">
+    <path d="M7 10l5 5 5-5H7z" />
+  </svg>
+);
 
 // Default empty form state
 const defaultFormData = {
@@ -29,6 +57,7 @@ const defaultFormData = {
 
 export default function ProposalFormContent() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const isNewProposal = !id || id === 'new';
   const { proposal, loading: proposalLoading, error: proposalError } = useProposal(id);
 
@@ -37,6 +66,13 @@ export default function ProposalFormContent() {
   const [colorPalette, setColorPalette] = useState([]);
   const [featuredBlooms, setFeaturedBlooms] = useState([]);
   const [recipes, setRecipes] = useState([]);
+
+  // Auto-save state
+  const [proposalId, setProposalId] = useState(id === 'new' ? null : id);
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved', 'error'
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const saveTimeoutRef = useRef(null);
+  const AUTOSAVE_DELAY = 1500; // 1.5 seconds after last change
 
   // Create Recipe form state
   const [showCreateRecipe, setShowCreateRecipe] = useState(false);
@@ -60,11 +96,14 @@ export default function ProposalFormContent() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [newColor, setNewColor] = useState('#ffffff');
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const colorInputRef = useRef(null);
+  const imageModalRef = useRef(null);
+  const colorPickerRef = useRef(null);
 
   // Preset color swatches for quick selection
   const presetColors = [
@@ -108,8 +147,81 @@ export default function ProposalFormContent() {
       if (proposal.recipes) {
         setRecipes(proposal.recipes);
       }
+      // Mark as initialized after loading existing data
+      setHasInitialized(true);
     }
   }, [proposal]);
+
+  // Mark as initialized for new proposals after first render
+  useEffect(() => {
+    if (isNewProposal && !proposalLoading) {
+      setHasInitialized(true);
+    }
+  }, [isNewProposal, proposalLoading]);
+
+  // Auto-save function
+  const saveProposal = useCallback(async () => {
+    // Don't save if form is essentially empty (new proposal with no data)
+    const hasContent = formData.customerName || formData.proposalName ||
+                       formData.eventName || inspirationImages.length > 0 ||
+                       colorPalette.length > 0 || featuredBlooms.length > 0 ||
+                       recipes.length > 0;
+
+    if (!hasContent) return;
+
+    setSaveStatus('saving');
+
+    const dataToSave = {
+      ...formData,
+      inspirationImages,
+      colorPalette,
+      featuredBlooms,
+      recipes,
+    };
+
+    try {
+      if (proposalId) {
+        // Update existing
+        await proposalService.update(proposalId, dataToSave);
+      } else {
+        // Create new
+        const newId = await proposalService.create(dataToSave);
+        setProposalId(newId);
+        // Update URL without full page reload
+        navigate(`/proposal/${newId}`, { replace: true });
+      }
+      setSaveStatus('saved');
+    } catch (err) {
+      console.error('Auto-save failed:', err);
+      setSaveStatus('error');
+    }
+  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, proposalId, navigate]);
+
+  // Auto-save effect - triggers on data changes
+  useEffect(() => {
+    // Don't auto-save until we've initialized (loaded existing data or confirmed new)
+    if (!hasInitialized) return;
+
+    // Mark as unsaved
+    setSaveStatus('unsaved');
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save
+    saveTimeoutRef.current = setTimeout(() => {
+      saveProposal();
+    }, AUTOSAVE_DELAY);
+
+    // Cleanup on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, hasInitialized, saveProposal]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -222,6 +334,11 @@ export default function ProposalFormContent() {
   // Inspiration Images handlers
   const handleAddImage = () => {
     if (inspirationImages.length >= 8) return;
+    // Close color picker if open (no confirmation needed since we're switching)
+    if (showColorPicker) {
+      setShowColorPicker(false);
+      setNewColor('#ffffff');
+    }
     setShowImageModal(true);
     setImageInputMode('url');
     setNewImageUrl('');
@@ -238,19 +355,61 @@ export default function ProposalFormContent() {
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
+    processImageFile(file);
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Shared function to process an image file (used by both file input and drag/drop)
+  const processImageFile = (file) => {
     if (file && inspirationImages.length < 8) {
+      // Validate it's an image
+      if (!file.type.startsWith('image/')) {
+        return;
+      }
       // Convert to base64 data URL for now
       // In production, you'd upload to Firebase Storage
       const reader = new FileReader();
       reader.onload = (event) => {
         setInspirationImages(prev => [...prev, event.target.result]);
         setShowImageModal(false);
+        setIsDragging(false);
       };
       reader.readAsDataURL(file);
     }
-    // Reset the file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set dragging false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processImageFile(files[0]);
     }
   };
 
@@ -266,6 +425,11 @@ export default function ProposalFormContent() {
   // Color Palette handlers
   const handleAddColor = () => {
     if (colorPalette.length >= 8) return;
+    // Close image modal if open (no confirmation needed since we're switching)
+    if (showImageModal) {
+      setShowImageModal(false);
+      setNewImageUrl('');
+    }
     setShowColorPicker(true);
     setNewColor('#4D96FF');
   };
@@ -294,16 +458,42 @@ export default function ProposalFormContent() {
     setColorPalette(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Close search results when clicking outside
+  // Close search results and modals when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
+      // Close bloom search results
       if (bloomSearchRef.current && !bloomSearchRef.current.contains(e.target)) {
         setShowBloomResults(false);
+      }
+
+      // Close image modal when clicking outside
+      if (showImageModal && imageModalRef.current && !imageModalRef.current.contains(e.target)) {
+        // Check if there's unsaved content (URL input has text)
+        if (imageInputMode === 'url' && newImageUrl.trim()) {
+          const confirmed = window.confirm('You have an unsaved image URL. Are you sure you want to close without adding it?');
+          if (confirmed) {
+            setNewImageUrl('');
+            setShowImageModal(false);
+          }
+        } else {
+          // No unsaved content, just close
+          setNewImageUrl('');
+          setShowImageModal(false);
+        }
+      }
+
+      // Close color picker when clicking outside
+      if (showColorPicker && colorPickerRef.current && !colorPickerRef.current.contains(e.target)) {
+        const confirmed = window.confirm('You haven\'t added a color yet. Are you sure you want to close the color picker?');
+        if (confirmed) {
+          setNewColor('#ffffff');
+          setShowColorPicker(false);
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [showImageModal, showColorPicker, imageInputMode, newImageUrl]);
 
   // Show loading state while fetching existing proposal
   if (!isNewProposal && proposalLoading) {
@@ -344,25 +534,21 @@ export default function ProposalFormContent() {
       {/* Header */}
       <div className="flex gap-[10px] items-center justify-between px-[15px] py-[15px]">
         <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
-          {isNewProposal ? 'Proposal Builder > New Proposal' : 'Proposal Builder > Edit Proposal'}
+          {isNewProposal && !proposalId ? 'Proposal Builder > New Proposal' : 'Proposal Builder > Edit Proposal'}
         </p>
-        <div className="flex gap-[10px]">
-          <div className="bg-[rgba(238,238,238,0.93)] border border-[#ccc] border-solid flex gap-[5px] items-center justify-center p-[5px] cursor-pointer hover:bg-[#e6e6e6]">
-            <div className="relative size-[20px]">
-              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage7} />
-            </div>
-            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] whitespace-nowrap">
-              Share Proposal
-            </p>
-          </div>
-          <div className="bg-[rgba(238,238,238,0.93)] border border-[#ccc] border-solid flex gap-[5px] items-center justify-center p-[5px] cursor-pointer hover:bg-[#e6e6e6]">
-            <div className="relative size-[15px]">
-              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage3} />
-            </div>
-            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] whitespace-nowrap">
-              Save Proposal
-            </p>
-          </div>
+        <div className="flex items-center gap-[8px]">
+          {saveStatus === 'saving' && (
+            <span className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">Saving...</span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[12px]">Saved</span>
+          )}
+          {saveStatus === 'unsaved' && (
+            <span className="font-['Avenir:Roman',sans-serif] text-[#f5a623] text-[12px]">Unsaved changes</span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">Save failed</span>
+          )}
         </div>
       </div>
 
@@ -487,7 +673,7 @@ export default function ProposalFormContent() {
                   className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
                 >
                   <div className="opacity-50 size-[40px]">
-                    <img alt="" className="max-w-none object-cover size-full" src={imgRectangle9} />
+                    <ImageIcon />
                   </div>
                   <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                     Add a Photo
@@ -501,7 +687,7 @@ export default function ProposalFormContent() {
                   className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]"
                 >
                   <div className="opacity-50 size-[40px]">
-                    <img alt="" className="max-w-none object-cover size-full" src={imgRectangle9} />
+                    <ImageIcon />
                   </div>
                   <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                     Add a Photo
@@ -510,7 +696,7 @@ export default function ProposalFormContent() {
               )}
               {/* Image Add Modal */}
               {showImageModal && (
-                <div className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] w-[320px] bg-white shadow-lg">
+                <div ref={imageModalRef} className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] w-[320px] bg-white shadow-lg">
                   <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Add an Image</p>
 
                   {/* Tab buttons */}
@@ -577,17 +763,27 @@ export default function ProposalFormContent() {
                         onChange={handleFileUpload}
                         className="hidden"
                       />
-                      <button
+                      <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-[#ccc] rounded-[5px] py-[30px] px-[20px] text-center hover:border-[#4a9380] hover:bg-[#f9fdfb] transition-colors"
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-[5px] py-[30px] px-[20px] text-center transition-colors cursor-pointer ${
+                          isDragging
+                            ? 'border-[#4a9380] bg-[#e8f5f1]'
+                            : 'border-[#ccc] hover:border-[#4a9380] hover:bg-[#f9fdfb]'
+                        }`}
                       >
-                        <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px]">
-                          Click to browse files
+                        <p className={`font-['Avenir:Roman',sans-serif] text-[14px] ${
+                          isDragging ? 'text-[#4a9380]' : 'text-[#666]'
+                        }`}>
+                          {isDragging ? 'Drop image here' : 'Click or drag image here'}
                         </p>
                         <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[11px] mt-[5px]">
                           JPG, PNG, GIF up to 10MB
                         </p>
-                      </button>
+                      </div>
                       <button
                         onClick={handleCancelImage}
                         className="border border-[#ccc] px-[20px] py-[8px] text-[12px] rounded hover:bg-[#f5f5f5]"
@@ -628,7 +824,7 @@ export default function ProposalFormContent() {
                     className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
                   >
                     <div className="size-[40px]">
-                      <img alt="" className="max-w-none object-cover opacity-50 size-full" src={imgImage6} />
+                      <ColorIcon />
                     </div>
                   </div>
                 ))}
@@ -639,13 +835,13 @@ export default function ProposalFormContent() {
                     className="border border-[#ccc] border-dashed flex items-center p-[10px] rounded-full cursor-pointer hover:bg-[#fafafa]"
                   >
                     <div className="size-[40px]">
-                      <img alt="" className="max-w-none object-cover opacity-50 size-full" src={imgImage6} />
+                      <ColorIcon />
                     </div>
                   </div>
                 )}
                 {/* Color Picker */}
                 {showColorPicker && (
-                  <div className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] bg-white shadow-lg w-[280px]">
+                  <div ref={colorPickerRef} className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] bg-white shadow-lg w-[280px]">
                     <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Choose a Color</p>
 
                     {/* Quick Pick - Preset Swatches */}
@@ -678,19 +874,12 @@ export default function ProposalFormContent() {
                           onChange={(e) => setNewColor(e.target.value)}
                           className="w-[50px] h-[40px] cursor-pointer border border-[#ccc] rounded"
                         />
-                        <div className="flex flex-col gap-[5px] flex-1">
-                          <input
-                            type="text"
-                            value={newColor}
-                            onChange={(e) => setNewColor(e.target.value)}
-                            placeholder="#ffffff"
-                            className="border border-[#ccc] border-solid px-[10px] py-[6px] text-[12px] outline-none rounded w-full"
-                          />
-                        </div>
-                        <div
-                          className="w-[40px] h-[40px] rounded border border-[#ccc]"
-                          style={{ backgroundColor: newColor }}
-                          title="Preview"
+                        <input
+                          type="text"
+                          value={newColor}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          placeholder="#ffffff"
+                          className="border border-[#ccc] border-solid px-[10px] py-[6px] text-[12px] outline-none rounded flex-1"
                         />
                       </div>
                     </div>
@@ -741,8 +930,8 @@ export default function ProposalFormContent() {
               {/* Wide search input with results dropdown */}
               <div className="relative" ref={bloomSearchRef}>
                 <div className="border border-[#ccc] border-solid flex items-center gap-[10px] px-[10px] py-[15px] rounded-[5px] w-[520px]">
-                  <div className="h-[18px] w-[20px] shrink-0">
-                    <img alt="" className="max-w-none object-cover size-full" src={imgScreenshot20260118At111910Pm1} />
+                  <div className="h-[18px] w-[18px] shrink-0">
+                    <SearchIcon />
                   </div>
                   <input
                     type="text"
@@ -799,7 +988,7 @@ export default function ProposalFormContent() {
                 </p>
                 <div className="flex items-center justify-center">
                   <div className="rotate-180 size-[10px]">
-                    <img alt="" className="block max-w-none size-full" src={imgPolygon3} />
+                    <ChevronIcon />
                   </div>
                 </div>
               </div>
@@ -810,7 +999,7 @@ export default function ProposalFormContent() {
                 </p>
                 <div className="flex items-center justify-center">
                   <div className="rotate-180 size-[10px]">
-                    <img alt="" className="block max-w-none size-full" src={imgPolygon3} />
+                    <ChevronIcon />
                   </div>
                 </div>
               </div>
@@ -821,7 +1010,7 @@ export default function ProposalFormContent() {
           {featuredBlooms.length === 0 ? (
             <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
               <div className="size-[20px]">
-                <img alt="" className="max-w-none object-cover size-full" src={imgImage4} />
+                <InfoIcon />
               </div>
               <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
                 No flowers selected yet. Start by searching for a flower or DIY kit above.
@@ -1112,7 +1301,7 @@ export default function ProposalFormContent() {
                     ) : (
                       <div className="border border-[#ccc] border-dashed flex flex-col gap-[10px] items-center px-[28px] py-[40px] size-[142px] cursor-pointer hover:bg-[#fafafa]">
                         <div className="opacity-50 size-[40px]">
-                          <img alt="" className="max-w-none object-cover size-full" src={imgRectangle9} />
+                          <ImageIcon />
                         </div>
                         <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] uppercase">
                           Add a Photo
@@ -1172,7 +1361,7 @@ export default function ProposalFormContent() {
             </p>
             <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
               <div className="size-[20px]">
-                <img alt="" className="max-w-none object-cover size-full" src={imgImage4} />
+                <InfoIcon />
               </div>
               <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
                 Your shopping list will appear once you add recipes.
