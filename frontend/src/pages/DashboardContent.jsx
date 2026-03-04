@@ -43,9 +43,16 @@ export default function DashboardContent() {
           </p>
 
           {loading && (
-            <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
-              Loading proposals...
-            </p>
+            <div className="w-full flex flex-col items-center justify-center py-16">
+              {/* Spinner */}
+              <div className="relative mb-4">
+                <div className="w-12 h-12 rounded-full border-4 border-[#e6e6e6]" />
+                <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-transparent border-t-[#4a9380] animate-spin" />
+              </div>
+              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px]">
+                Loading proposals...
+              </p>
+            </div>
           )}
 
           {error && (

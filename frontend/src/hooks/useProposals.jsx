@@ -47,6 +47,9 @@ const invalidateCache = (id) => {
   if (id) sessionStorage.removeItem(CACHE_PREFIX + id);
 };
 
+// Minimum loading time for smooth UX (ms)
+const MIN_LOADING_TIME = 1200;
+
 // Hook to fetch all proposals (for dashboard)
 export function useProposals() {
   const [proposals, setProposals] = useState([]);
@@ -54,12 +57,20 @@ export function useProposals() {
   const [error, setError] = useState(null);
 
   const fetchProposals = useCallback(async (skipCache = false) => {
+    const startTime = Date.now();
+
     try {
       // Check cache first
       if (!skipCache) {
         const cached = getCache(CACHE_LIST_KEY);
         if (cached) {
           setProposals(cached);
+          // Still show loading for minimum time even with cache
+          const elapsed = Date.now() - startTime;
+          const remaining = MIN_LOADING_TIME - elapsed;
+          if (remaining > 0) {
+            await new Promise(resolve => setTimeout(resolve, remaining));
+          }
           setLoading(false);
           return;
         }
@@ -78,6 +89,13 @@ export function useProposals() {
       setProposals(data);
       setCache(CACHE_LIST_KEY, data);
       setError(null);
+
+      // Ensure minimum loading time
+      const elapsed = Date.now() - startTime;
+      const remaining = MIN_LOADING_TIME - elapsed;
+      if (remaining > 0) {
+        await new Promise(resolve => setTimeout(resolve, remaining));
+      }
     } catch (err) {
       console.error('Error fetching proposals:', err);
       setError(err.message);
