@@ -11,7 +11,7 @@ const imgPolygon1Form = "https://www.figma.com/api/mcp/asset/5dd76d52-b0fa-40ff-
 function SidebarDashboard() {
   const navigate = useNavigate();
   return (
-    <div className="bg-[#f3f5f6] border-b border-black border-solid content-stretch flex flex-col gap-[15px] h-[1367px] items-start py-[15px] relative shrink-0 w-[184px]" data-node-id="1:8">
+    <div className="bg-[#f3f5f6] border-b border-black border-solid content-stretch flex flex-col gap-[15px] min-h-screen items-start py-[15px] relative shrink-0 w-[184px]" data-node-id="1:8">
       <div className="border-[#e6e6e6] border-b border-solid content-stretch flex items-center justify-center p-[15px] relative shrink-0" data-node-id="1:17">
         <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] whitespace-nowrap" data-node-id="1:12">
           Proposal Manager
@@ -95,7 +95,7 @@ function SidebarDashboard() {
 function SidebarForm() {
   const navigate = useNavigate();
   return (
-    <div className="bg-[#f3f5f6] border-b border-black border-solid content-stretch flex flex-col gap-[15px] h-[1899px] items-start py-[15px] relative shrink-0" data-node-id="28:475">
+    <div className="bg-[#f3f5f6] border-b border-black border-solid content-stretch flex flex-col gap-[15px] min-h-screen items-start py-[15px] relative shrink-0 w-[184px]" data-node-id="28:475">
       <div className="border-[#e6e6e6] border-b border-solid content-stretch flex items-center justify-center p-[15px] relative shrink-0" data-node-id="28:476">
         <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#161616] text-[18px] whitespace-nowrap" data-node-id="28:477">
           Proposal Manager

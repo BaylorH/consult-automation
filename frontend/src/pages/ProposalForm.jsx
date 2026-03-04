@@ -50,7 +50,7 @@ export default function ProposalForm() {
         </div>
       </div>
       <Sidebar activeItem="newProposal" />
-      <div className="bg-[#fcfefe] content-stretch flex flex-col gap-[15px] h-[1759px] items-start py-[15px] relative shrink-0" data-node-id="28:500">
+      <div className="bg-[#fcfefe] content-stretch flex flex-col gap-[15px] min-h-screen items-start py-[15px] relative flex-1" data-node-id="28:500">
         <div className="content-stretch flex gap-[10px] items-center justify-center px-[30px] py-[15px] relative shrink-0 w-[1024px]" data-node-id="28:501">
           <div className="content-stretch flex flex-[1_0_0] items-center justify-between min-h-px min-w-px relative" data-node-id="28:502">
             <p className="flex-[1_0_0] font-['Avenir:Heavy',sans-serif] leading-[normal] min-h-px min-w-px not-italic relative text-[#161616] text-[18px]" data-node-id="28:503">{`Proposal Builder > New Proposal`}</p>
@@ -120,7 +120,7 @@ export default function ProposalForm() {
               <select
                 value={formData.consultationLevel}
                 onChange={(e) => updateField('consultationLevel', e.target.value)}
-                className="border border-[#ccc] border-solid h-[45px] p-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
+                className="border border-[#ccc] border-solid h-[45px] px-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
                 data-node-id="28:518"
               >
                 <option value="Basic Consultation">Basic Consultation</option>
@@ -146,7 +146,7 @@ export default function ProposalForm() {
               <select
                 value={formData.proposalTemplate}
                 onChange={(e) => updateField('proposalTemplate', e.target.value)}
-                className="border border-[#ccc] border-solid h-[45px] p-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
+                className="border border-[#ccc] border-solid h-[45px] px-[15px] shrink-0 w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none appearance-none cursor-pointer"
                 data-node-id="28:526"
               >
                 <option value="Modern Wedding Consultation">Modern Wedding Consultation</option>

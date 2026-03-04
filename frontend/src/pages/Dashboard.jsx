@@ -30,7 +30,7 @@ export default function Dashboard() {
         </div>
       </div>
       <Sidebar activeItem="dashboard" />
-      <div className="bg-[#fcfefe] border-b border-black border-solid content-stretch flex flex-col gap-[15px] h-[1367px] items-start py-[15px] relative shrink-0" data-node-id="1:67">
+      <div className="bg-[#fcfefe] border-b border-black border-solid content-stretch flex flex-col gap-[15px] min-h-screen items-start py-[15px] relative flex-1" data-node-id="1:67">
         <div className="content-stretch flex gap-[10px] items-center justify-center px-[30px] py-[15px] relative shrink-0 w-[1024px]" data-node-id="1:68">
           <div className="content-stretch flex flex-[1_0_0] items-center justify-between min-h-px min-w-px relative" data-node-id="3:163">
             <p className="flex-[1_0_0] font-['Avenir:Heavy',sans-serif] leading-[normal] min-h-px min-w-px not-italic relative text-[#161616] text-[18px]" data-node-id="1:69">
