@@ -58,7 +58,7 @@ export default function ProposalFormContent() {
 
   // Auto-save state
   const [proposalId, setProposalId] = useState(id === 'new' ? null : id);
-  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved', 'error'
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saved', 'saving', 'unsaved', 'error'
   const [hasInitialized, setHasInitialized] = useState(false);
   const saveTimeoutRef = useRef(null);
   const AUTOSAVE_DELAY = 1500; // 1.5 seconds after last change
@@ -186,13 +186,22 @@ export default function ProposalFormContent() {
     }
   }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, proposalId, navigate]);
 
+  // Check if form has any actual content
+  const hasContent = formData.customerName || formData.customerEmail ||
+                     formData.proposalName || formData.eventName ||
+                     formData.styleNotes || inspirationImages.length > 0 ||
+                     colorPalette.length > 0 || featuredBlooms.length > 0 ||
+                     recipes.length > 0;
+
   // Auto-save effect - triggers on data changes
   useEffect(() => {
     // Don't auto-save until we've initialized (loaded existing data or confirmed new)
     if (!hasInitialized) return;
 
-    // Mark as unsaved
-    setSaveStatus('unsaved');
+    // Only mark as unsaved if there's actual content
+    if (hasContent) {
+      setSaveStatus('unsaved');
+    }
 
     // Clear existing timeout
     if (saveTimeoutRef.current) {
@@ -210,7 +219,7 @@ export default function ProposalFormContent() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, hasInitialized, saveProposal]);
+  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, hasInitialized, saveProposal, hasContent]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -544,21 +553,23 @@ export default function ProposalFormContent() {
         <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
           {isNewProposal && !proposalId ? 'Proposal Builder > New Proposal' : 'Proposal Builder > Edit Proposal'}
         </p>
-        {/* Save Status - inline after title */}
-        <div className="flex items-center gap-[8px]">
-          {saveStatus === 'saving' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">Saving...</span>
-          )}
-          {saveStatus === 'saved' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[12px]">✓ Saved</span>
-          )}
-          {saveStatus === 'unsaved' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#f5a623] text-[12px]">Unsaved changes</span>
-          )}
-          {saveStatus === 'error' && (
-            <span className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">Save failed</span>
-          )}
-        </div>
+        {/* Save Status - inline after title (only show if there's content) */}
+        {hasContent && (
+          <div className="flex items-center gap-[8px]">
+            {saveStatus === 'saving' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">Saving...</span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[12px]">✓ Saved</span>
+            )}
+            {saveStatus === 'unsaved' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#f5a623] text-[12px]">Unsaved changes</span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">Save failed</span>
+            )}
+          </div>
+        )}
         {/* Delete Button - only show for saved proposals */}
         {proposalId && (
           <button
