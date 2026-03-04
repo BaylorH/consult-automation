@@ -13,38 +13,41 @@ const MIN_LOADING_TIME = 1200;
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
+  // Start minimum loading timer when we have a user
+  useEffect(() => {
+    if (user && !minTimeElapsed) {
+      const timer = setTimeout(() => {
+        setMinTimeElapsed(true);
+      }, MIN_LOADING_TIME);
+      return () => clearTimeout(timer);
+    }
+  }, [user, minTimeElapsed]);
+
+  // Show loading while auth is checking
   if (loading) {
     return <LoadingScreen />;
   }
 
+  // Not logged in - redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Logged in but minimum time hasn't elapsed - show loading
+  if (!minTimeElapsed) {
+    return <LoadingScreen />;
   }
 
   return children;
 }
 
 function AppRoutes() {
-  const { user, loading: authLoading } = useAuth();
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-  const [hasStartedLoading, setHasStartedLoading] = useState(false);
+  const { user, loading } = useAuth();
 
-  // Start minimum loading timer on mount
-  useEffect(() => {
-    if (!hasStartedLoading) {
-      setHasStartedLoading(true);
-      const timer = setTimeout(() => {
-        setMinTimeElapsed(true);
-      }, MIN_LOADING_TIME);
-      return () => clearTimeout(timer);
-    }
-  }, [hasStartedLoading]);
-
-  // Show loading screen until BOTH auth is done AND minimum time has passed
-  const showLoading = authLoading || !minTimeElapsed;
-
-  if (showLoading) {
+  // Show loading screen while checking auth state
+  if (loading) {
     return <LoadingScreen />;
   }
 
