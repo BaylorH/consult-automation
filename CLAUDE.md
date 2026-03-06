@@ -25,6 +25,8 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
 - **User profile pill** (avatar, name, logout) in top right corner
 - **Branded login page** with gradient background, pattern overlay, white card
 - **Loading animation** in main content area (1.2s minimum display time)
+- **Delete proposal** functionality with confirmation dialog
+- **Smart save status** - only shows when form has content (blank forms show nothing)
 
 ### Form Sections Implemented
 1. **Consultation Proposal Set** - All fields working (customer info, dates, consultation level)
