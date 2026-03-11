@@ -122,8 +122,7 @@ proposals/{id}
 ├── customerName: "Jonathan & Amanda Smith"
 ├── customerEmail: "email@example.com"
 ├── proposalName: "Jonathan & Amanda's - March 26"
-├── consultationLevel: "Professional Consultation" | "Basic Consultation"
-├── proposalTemplate: "Modern Wedding Consultation"
+├── consultationLevel: "Basic Consultation" | "Professional Consultation" | "Deluxe Consultation"
 ├── eventDate: Timestamp
 ├── deliveryDate: Timestamp
 ├── styleNotes: "Romantic garden theme..."
@@ -160,12 +159,14 @@ proposals/{id}
 - **API Base URL**: `https://ff-api.fiftyflowers.com/api/v1` (prod)
 
 #### Relevant Branches
-| Project | Branch | Status |
-|---------|--------|--------|
+| Project | Branch | Purpose |
+|---------|--------|---------|
+| **Deployment** | `baylor/bb-dev-combined` | Combined branch for BB Dev deployment (Internal AI + Share Your Flair + SearchProducts) |
+| Consult Automation PR | `baylor/consult-automation` | Standalone PR branch for SearchProducts function only |
 | FiftyFlowers Internal AI | `baylor/internal-ai-clean` | PR pending |
 | Share Your Flair | `baylor/share-your-flair` | In development |
-| Consult Automation | `baylor/consult-automation` | Created, adds SearchProducts |
-| Combined BB Dev | `baylor/bb-dev-combined` | All 3 projects merged |
+
+**Note:** Deploy from `baylor/bb-dev-combined`. The `baylor/consult-automation` branch is for PR review only - its changes are already merged into bb-dev-combined.
 
 ### shopify-theme2.0 (Frontend Reference)
 - **Location**: `/Users/baylorharrison/Documents/GitHub/shopify-theme2.0`

@@ -38,7 +38,6 @@ const defaultFormData = {
   proposalName: '',
   consultationLevel: 'Basic Consultation',
   eventName: '',
-  proposalTemplate: 'Modern Wedding Consultation',
   eventDate: '',
   deliveryDate: '',
   styleNotes: '',
@@ -117,7 +116,6 @@ export default function ProposalFormContent() {
         proposalName: proposal.proposalName || '',
         consultationLevel: proposal.consultationLevel || 'Basic Consultation',
         eventName: proposal.eventName || '',
-        proposalTemplate: proposal.proposalTemplate || 'Modern Wedding Consultation',
         eventDate: formatDateForInput(proposal.eventDate),
         deliveryDate: formatDateForInput(proposal.deliveryDate),
         styleNotes: proposal.styleNotes || '',
@@ -225,7 +223,7 @@ export default function ProposalFormContent() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const isProfessional = formData.consultationLevel === 'Professional Consultation';
+  const isProfessional = formData.consultationLevel === 'Professional Consultation' || formData.consultationLevel === 'Deluxe Consultation';
 
   // Create Recipe form handlers
   const updateNewRecipe = (field, value) => {
@@ -624,6 +622,7 @@ export default function ProposalFormContent() {
             >
               <option value="Basic Consultation">Basic Consultation</option>
               <option value="Professional Consultation">Professional Consultation</option>
+              <option value="Deluxe Consultation">Deluxe Consultation</option>
             </select>
           </FormField>
 
@@ -634,20 +633,6 @@ export default function ProposalFormContent() {
               onChange={(e) => updateField('eventName', e.target.value)}
               className="border border-[rgba(204,204,204,0.93)] border-solid h-[45px] rounded-[5px] w-full px-[15px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none"
             />
-          </FormField>
-
-          <FormField label="Proposal Template:">
-            <select
-              value={formData.proposalTemplate}
-              onChange={(e) => updateField('proposalTemplate', e.target.value)}
-              className="border border-[#ccc] border-solid h-[45px] px-[15px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none cursor-pointer"
-            >
-              <option value="Modern Wedding Consultation">Modern Wedding Consultation</option>
-              <option value="Classic Wedding Consultation">Classic Wedding Consultation</option>
-              <option value="Baby Shower Consultation">Baby Shower Consultation</option>
-              <option value="Quinceañera Consultation">Quinceañera Consultation</option>
-              <option value="Fund Raiser Consultation">Fund Raiser Consultation</option>
-            </select>
           </FormField>
 
           <FormField label="Event Date:">
