@@ -85,7 +85,7 @@ export default function ProposalFormContent() {
   // Fetch all proposals to extract all recipes
   const { proposals: allProposals } = useProposals();
 
-  // Extract all unique recipes from all proposals
+  // Extract all unique recipes from all proposals (with consultation level)
   const allExistingRecipes = useMemo(() => {
     const recipesMap = new Map();
     (allProposals || []).forEach((prop) => {
@@ -96,6 +96,7 @@ export default function ProposalFormContent() {
           recipesMap.set(key, {
             ...recipe,
             fromProposal: prop.proposalName || prop.eventName || 'Unknown',
+            consultationLevel: prop.consultationLevel || 'Basic Consultation',
           });
         }
       });
@@ -109,6 +110,7 @@ export default function ProposalFormContent() {
     const currentProposalRecipes = recipes.map(r => ({
       ...r,
       fromProposal: 'This Proposal',
+      consultationLevel: formData.consultationLevel || 'Basic Consultation',
     }));
 
     // Combine with recipes from other proposals (avoiding exact duplicates by name)
@@ -129,7 +131,34 @@ export default function ProposalFormContent() {
     }
 
     return combined;
-  }, [allExistingRecipes, recipeSearchQuery, recipes]);
+  }, [allExistingRecipes, recipeSearchQuery, recipes, formData.consultationLevel]);
+
+  // Group filtered recipes by consultation level
+  const groupedExistingRecipes = useMemo(() => {
+    const groups = {
+      'Basic Consultation': [],
+      'Professional Consultation': [],
+      'Deluxe Consultation': [],
+    };
+
+    filteredExistingRecipes.forEach((recipe) => {
+      const level = recipe.consultationLevel || 'Basic Consultation';
+      if (groups[level]) {
+        groups[level].push(recipe);
+      } else {
+        groups['Basic Consultation'].push(recipe);
+      }
+    });
+
+    return groups;
+  }, [filteredExistingRecipes]);
+
+  // Short labels for consultation levels
+  const LEVEL_LABELS = {
+    'Basic Consultation': 'Basic',
+    'Professional Consultation': 'Professional',
+    'Deluxe Consultation': 'Deluxe',
+  };
 
   // Product search state (for Featured Blooms)
   const [bloomSearchQuery, setBloomSearchQuery] = useState('');
@@ -1449,40 +1478,52 @@ export default function ProposalFormContent() {
                       placeholder="Search recipes..."
                       className="border border-[#ccc] border-solid rounded-[5px] px-[10px] py-[8px] w-full font-['Avenir:Roman',sans-serif] text-[14px] outline-none"
                     />
-                    <div className="flex flex-col gap-[8px] max-h-[300px] overflow-y-auto">
+                    <div className="flex flex-col gap-[12px] max-h-[350px] overflow-y-auto">
                       {filteredExistingRecipes.length === 0 ? (
                         <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] py-[20px] text-center">
                           {recipeSearchQuery ? 'No recipes match your search' : 'No existing recipes found'}
                         </p>
                       ) : (
-                        filteredExistingRecipes.map((recipe, idx) => (
-                          <div
-                            key={idx}
-                            onClick={() => handleSelectExistingRecipe(recipe)}
-                            className="border border-[#eee] border-solid flex items-center gap-[10px] p-[10px] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] hover:border-[#4a9380]"
-                          >
-                            {recipe.image && (
-                              <img
-                                src={recipe.image}
-                                alt={recipe.name}
-                                className="w-[50px] h-[50px] object-cover rounded-[3px]"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">
-                                {recipe.name}
+                        Object.entries(groupedExistingRecipes).map(([level, levelRecipes]) => {
+                          if (levelRecipes.length === 0) return null;
+                          return (
+                            <div key={level}>
+                              <p className="font-['Avenir:Heavy',sans-serif] text-[#4a9380] text-[11px] uppercase tracking-wide mb-[6px] pb-[4px] border-b border-[#eee]">
+                                {LEVEL_LABELS[level] || level} ({levelRecipes.length})
                               </p>
-                              {recipe.description && (
-                                <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[11px] line-clamp-1">
-                                  {recipe.description}
-                                </p>
-                              )}
-                              <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[10px]">
-                                From: {recipe.fromProposal}
-                              </p>
+                              <div className="flex flex-col gap-[6px]">
+                                {levelRecipes.map((recipe, idx) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => handleSelectExistingRecipe(recipe)}
+                                    className="border border-[#eee] border-solid flex items-center gap-[10px] p-[10px] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] hover:border-[#4a9380]"
+                                  >
+                                    {recipe.image && (
+                                      <img
+                                        src={recipe.image}
+                                        alt={recipe.name}
+                                        className="w-[50px] h-[50px] object-cover rounded-[3px]"
+                                      />
+                                    )}
+                                    <div className="flex-1">
+                                      <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">
+                                        {recipe.name}
+                                      </p>
+                                      {recipe.description && (
+                                        <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[11px] line-clamp-1">
+                                          {recipe.description}
+                                        </p>
+                                      )}
+                                      <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[10px]">
+                                        From: {recipe.fromProposal}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                     <button
