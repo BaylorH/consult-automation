@@ -150,6 +150,7 @@ export default function ProposalFormContent() {
   const imageModalRef = useRef(null);
   const colorPickerRef = useRef(null);
   const recipeFormRef = useRef(null);
+  const recipesSectionRef = useRef(null);
 
   // Preset color swatches for quick selection
   const presetColors = [
@@ -415,6 +416,11 @@ export default function ProposalFormContent() {
     setEditingRecipeId(null);
     setShowCreateRecipe(false);
     setRecipeNameError('');
+
+    // Scroll back to recipes section
+    setTimeout(() => {
+      recipesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleEditRecipe = (recipeId) => {
@@ -1317,7 +1323,7 @@ export default function ProposalFormContent() {
           <BasicFloralRecipes />
         ) : (
           <div className="bg-white border border-[#eef0ef] border-solid flex flex-col gap-[30px] p-[30px] rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)]">
-            <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
+            <p ref={recipesSectionRef} className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
               Custom Floral Recipes {recipes.length > 0 && `(${recipes.length})`}
             </p>
 
@@ -1712,6 +1718,10 @@ export default function ProposalFormContent() {
                       setEditingRecipeId(null);
                       setShowCreateRecipe(false);
                       setRecipeNameError('');
+                      // Scroll back to recipes section
+                      setTimeout(() => {
+                        recipesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
                     }}
                     className="btn-action-outline"
                     style={{ color: '#666', borderColor: '#ccc' }}
