@@ -15,11 +15,21 @@ export default function DashboardContent() {
   const { proposals, loading, error } = useProposals();
 
   // Format Firestore timestamp to display string
+  // Handles: Firestore Timestamp, serialized {seconds, nanoseconds}, Date, ISO string
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
     try {
-      // Handle Firestore Timestamp object
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      let date;
+      if (timestamp.toDate) {
+        // Real Firestore Timestamp object
+        date = timestamp.toDate();
+      } else if (timestamp.seconds !== undefined) {
+        // Serialized Timestamp from cache (lost toDate method)
+        date = new Date(timestamp.seconds * 1000);
+      } else {
+        // String or Date
+        date = new Date(timestamp);
+      }
       if (isNaN(date.getTime())) return '';
       return date.toLocaleDateString('en-US', {
         year: 'numeric',

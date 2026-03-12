@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ShoppingList from '../components/ShoppingList';
 import BasicFloralRecipes from '../components/BasicFloralRecipes';
 import { useProposal, useProposals, proposalService } from '../hooks/useProposals';
+import { Timestamp } from 'firebase/firestore';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
 
 // Local image assets (downloaded from Figma)
@@ -157,10 +158,21 @@ export default function ProposalFormContent() {
   useEffect(() => {
     if (proposal) {
       // Convert Firestore timestamps to date strings for input fields
+      // Handles: Firestore Timestamp, serialized {seconds, nanoseconds}, Date, ISO string
       const formatDateForInput = (timestamp) => {
         if (!timestamp) return '';
         try {
-          const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+          let date;
+          if (timestamp.toDate) {
+            // Real Firestore Timestamp object
+            date = timestamp.toDate();
+          } else if (timestamp.seconds !== undefined) {
+            // Serialized Timestamp from cache (lost toDate method)
+            date = new Date(timestamp.seconds * 1000);
+          } else {
+            // String or Date
+            date = new Date(timestamp);
+          }
           if (isNaN(date.getTime())) return ''; // Invalid date
           return date.toISOString().split('T')[0]; // YYYY-MM-DD format
         } catch {
@@ -219,8 +231,22 @@ export default function ProposalFormContent() {
 
     setSaveStatus('saving');
 
+    // Convert date strings back to Firestore Timestamps for consistency
+    const convertDateToTimestamp = (dateStr) => {
+      if (!dateStr) return null;
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return null;
+        return Timestamp.fromDate(date);
+      } catch {
+        return null;
+      }
+    };
+
     const dataToSave = {
       ...formData,
+      eventDate: convertDateToTimestamp(formData.eventDate),
+      deliveryDate: convertDateToTimestamp(formData.deliveryDate),
       inspirationImages,
       colorPalette,
       featuredBlooms,
