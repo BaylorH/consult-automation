@@ -10,6 +10,20 @@ const InfoIcon = () => (
   </svg>
 );
 
+// Consultation level colors
+const LEVEL_COLORS = {
+  'Basic Consultation': '#6b7280',      // Gray
+  'Professional Consultation': '#4a9380', // Teal (brand color)
+  'Deluxe Consultation': '#8b5cf6',     // Purple
+};
+
+// Short labels for display
+const LEVEL_LABELS = {
+  'Basic Consultation': 'Basic',
+  'Professional Consultation': 'Professional',
+  'Deluxe Consultation': 'Deluxe',
+};
+
 export default function DashboardContent() {
   const navigate = useNavigate();
   const { proposals, loading, error } = useProposals();
@@ -90,8 +104,8 @@ export default function DashboardContent() {
           {!loading && !error && proposals.map((proposal) => (
             <ProposalCard
               key={proposal.id}
-              type={proposal.type}
-              typeColor={proposal.typeColor}
+              type={LEVEL_LABELS[proposal.consultationLevel] || proposal.consultationLevel || 'Basic'}
+              typeColor={LEVEL_COLORS[proposal.consultationLevel] || LEVEL_COLORS['Basic Consultation']}
               title={proposal.eventName}
               image={proposal.cardImage}
               date={formatDate(proposal.eventDate)}
