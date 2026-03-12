@@ -280,24 +280,22 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
 
         {/* Totals Section */}
         {shoppingItems.length > 0 && (
-          <div className="flex justify-end mt-[20px]">
-            <div className="border border-[#ccc] border-solid rounded-[5px] p-[20px] w-[320px]">
-              <div className="flex justify-between">
-                <div className="font-['Avenir:Heavy',sans-serif] text-[14px] text-black">
-                  <p className="mb-1">Subtotal:</p>
-                  <p className="mb-1">Consultation Discount ({discountPercent}%):</p>
-                  <p className="mb-0 mt-3 text-[16px]">Total:</p>
-                </div>
-                <div className="font-['Avenir:Roman',sans-serif] text-[14px] text-black text-right">
-                  <p className="mb-1">{formatPrice(subtotal)}</p>
-                  <p className="mb-1">-{formatPrice(discount)}</p>
-                  <p className="mb-0 mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">{formatPrice(total)}</p>
-                </div>
+          <div className="border border-[#ccc] border-solid rounded-[5px] p-[20px] mt-[20px] w-[450px]">
+            <div className="flex justify-between">
+              <div className="font-['Avenir:Heavy',sans-serif] text-[14px] text-black">
+                <p className="mb-1">Subtotal:</p>
+                <p className="mb-1">Consultation Discount ({discountPercent}%):</p>
+                <p className="mb-0 mt-3 text-[16px]">Total:</p>
               </div>
-              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] mt-4">
-                Your discount will be applied at checkout.
-              </p>
+              <div className="font-['Avenir:Roman',sans-serif] text-[14px] text-black text-right">
+                <p className="mb-1">{formatPrice(subtotal)}</p>
+                <p className="mb-1">-{formatPrice(discount)}</p>
+                <p className="mb-0 mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">{formatPrice(total)}</p>
+              </div>
             </div>
+            <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] mt-4">
+              Your discount will be applied at checkout.
+            </p>
           </div>
         )}
 
