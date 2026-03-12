@@ -23,16 +23,27 @@ export default function Layout({ children }) {
   const isNewProposal = location.pathname === '/proposal/new';
   const isOnDashboard = location.pathname === '/';
 
-  // Group proposals by consultant (author)
+  // Group proposals by consultant (author), then by consultation level
   const groupedProposals = useMemo(() => {
     const groups = {};
 
     (proposals || []).forEach((proposal) => {
       const author = proposal.author || 'Unknown';
+      const level = proposal.consultationLevel || 'Basic Consultation';
+
       if (!groups[author]) {
-        groups[author] = [];
+        groups[author] = {
+          total: 0,
+          levels: {}
+        };
       }
-      groups[author].push(proposal);
+
+      if (!groups[author].levels[level]) {
+        groups[author].levels[level] = [];
+      }
+
+      groups[author].levels[level].push(proposal);
+      groups[author].total++;
     });
 
     // Sort authors alphabetically
@@ -44,12 +55,14 @@ export default function Layout({ children }) {
     return sortedGroups;
   }, [proposals]);
 
-  // Find which category (consultant) the current proposal belongs to
-  const currentProposalCategory = useMemo(() => {
+  // Find which consultant the current proposal belongs to
+  const currentConsultant = useMemo(() => {
     if (!currentProposalId) return null;
-    for (const [author, props] of Object.entries(groupedProposals)) {
-      if (props.some(p => p.id === currentProposalId)) {
-        return author;
+    for (const [author, data] of Object.entries(groupedProposals)) {
+      for (const props of Object.values(data.levels)) {
+        if (props.some(p => p.id === currentProposalId)) {
+          return author;
+        }
       }
     }
     return null;
@@ -142,14 +155,14 @@ export default function Layout({ children }) {
               No proposals yet
             </p>
           ) : (
-            Object.entries(groupedProposals).map(([author, authorProposals]) => (
-              <CategorySection
+            Object.entries(groupedProposals).map(([author, data]) => (
+              <ConsultantSection
                 key={author}
-                label={author}
-                count={authorProposals.length}
-                proposals={authorProposals}
+                consultant={author}
+                total={data.total}
+                levels={data.levels}
                 currentProposalId={currentProposalId}
-                isActiveCategory={currentProposalCategory === author}
+                isActiveConsultant={currentConsultant === author}
                 onSelectProposal={(id) => navigate(`/proposal/${id}`)}
               />
             ))
@@ -165,11 +178,24 @@ export default function Layout({ children }) {
   );
 }
 
-function CategorySection({ label, count, proposals, currentProposalId, isActiveCategory, onSelectProposal }) {
+// Short labels for consultation levels
+const LEVEL_LABELS = {
+  'Basic Consultation': 'Basic',
+  'Professional Consultation': 'Professional',
+  'Deluxe Consultation': 'Deluxe',
+};
+
+// Order for consultation levels
+const LEVEL_ORDER = ['Basic Consultation', 'Professional Consultation', 'Deluxe Consultation'];
+
+function ConsultantSection({ consultant, total, levels, currentProposalId, isActiveConsultant, onSelectProposal }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Auto-expand if the current proposal is in this category
-  const shouldShow = isExpanded || isActiveCategory;
+  // Auto-expand if the current proposal is under this consultant
+  const shouldShow = isExpanded || isActiveConsultant;
+
+  // Sort levels in defined order
+  const sortedLevels = LEVEL_ORDER.filter(level => levels[level] && levels[level].length > 0);
 
   return (
     <div
@@ -177,25 +203,73 @@ function CategorySection({ label, count, proposals, currentProposalId, isActiveC
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      {/* Category Header */}
+      {/* Consultant Header */}
       <div
         className={`flex gap-[10px] items-center px-[15px] py-[8px] w-full cursor-pointer transition-colors ${
-          isActiveCategory ? 'bg-[#e8f5f1]' : 'hover:bg-[#e6e6e6]'
+          isActiveConsultant ? 'bg-[#e8f5f1]' : 'hover:bg-[#e6e6e6]'
         }`}
       >
         <p className={`flex-1 font-['Nunito_Sans:Bold',sans-serif] font-bold leading-[normal] text-[12px] ${
-          isActiveCategory ? 'text-[#4a9380]' : 'text-[#666]'
+          isActiveConsultant ? 'text-[#4a9380]' : 'text-[#666]'
         }`}>
-          {label} ({count})
+          {consultant} ({total})
         </p>
         <div className={`flex items-center justify-center size-[8px] transition-transform ${shouldShow ? 'rotate-180' : ''}`}>
           <img alt="" className="block max-w-none size-full" src={chevronIcon} />
         </div>
       </div>
 
-      {/* Expanded Proposal List */}
-      {shouldShow && proposals.length > 0 && (
+      {/* Expanded: Consultation Levels */}
+      {shouldShow && sortedLevels.length > 0 && (
         <div className="flex flex-col bg-[#eaecec]">
+          {sortedLevels.map((level) => (
+            <LevelSection
+              key={level}
+              level={level}
+              label={LEVEL_LABELS[level] || level}
+              proposals={levels[level]}
+              currentProposalId={currentProposalId}
+              onSelectProposal={onSelectProposal}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LevelSection({ level, label, proposals, currentProposalId, onSelectProposal }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Check if current proposal is in this level
+  const hasActiveProposal = proposals.some(p => p.id === currentProposalId);
+  const shouldShow = isExpanded || hasActiveProposal;
+
+  return (
+    <div
+      className="w-full"
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+    >
+      {/* Level Header */}
+      <div
+        className={`flex gap-[10px] items-center px-[20px] py-[5px] w-full cursor-pointer transition-colors ${
+          hasActiveProposal ? 'bg-[#d4e8e3]' : 'hover:bg-[#dfe1e1]'
+        }`}
+      >
+        <p className={`flex-1 font-['Avenir:Roman',sans-serif] text-[11px] uppercase tracking-wide ${
+          hasActiveProposal ? 'text-[#4a9380] font-medium' : 'text-[#888]'
+        }`}>
+          {label} ({proposals.length})
+        </p>
+        <div className={`flex items-center justify-center size-[6px] transition-transform ${shouldShow ? 'rotate-180' : ''}`}>
+          <img alt="" className="block max-w-none size-full opacity-50" src={chevronIcon} />
+        </div>
+      </div>
+
+      {/* Proposals List */}
+      {shouldShow && (
+        <div className="flex flex-col bg-[#e2e4e4]">
           {proposals.map((proposal) => {
             const isActive = proposal.id === currentProposalId;
             const displayName = proposal.proposalName || proposal.customerName || proposal.eventName || 'Untitled Proposal';
@@ -204,13 +278,13 @@ function CategorySection({ label, count, proposals, currentProposalId, isActiveC
               <div
                 key={proposal.id}
                 onClick={() => onSelectProposal(proposal.id)}
-                className={`flex items-center px-[20px] py-[6px] cursor-pointer transition-colors ${
+                className={`flex items-center px-[28px] py-[5px] cursor-pointer transition-colors ${
                   isActive
                     ? 'bg-[#4a9380] text-white border-r-4 border-[#2d6b5a]'
-                    : 'hover:bg-[#dfe1e1] text-[#333]'
+                    : 'hover:bg-[#d8dada] text-[#333]'
                 }`}
               >
-                <p className={`font-['Avenir:Roman',sans-serif] text-[12px] truncate ${
+                <p className={`font-['Avenir:Roman',sans-serif] text-[11px] truncate ${
                   isActive ? 'text-white font-medium' : 'text-[#333]'
                 }`}>
                   {displayName}
@@ -218,15 +292,6 @@ function CategorySection({ label, count, proposals, currentProposalId, isActiveC
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {shouldShow && proposals.length === 0 && (
-        <div className="px-[20px] py-[6px] bg-[#eaecec]">
-          <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[11px] italic">
-            No proposals yet
-          </p>
         </div>
       )}
     </div>
