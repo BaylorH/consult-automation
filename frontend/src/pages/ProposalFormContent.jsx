@@ -85,7 +85,7 @@ export default function ProposalFormContent() {
   // Fetch all proposals to extract all recipes
   const { proposals: allProposals } = useProposals();
 
-  // Extract all unique recipes from all proposals (with consultation level)
+  // Extract all unique recipes from all proposals
   const allExistingRecipes = useMemo(() => {
     const recipesMap = new Map();
     (allProposals || []).forEach((prop) => {
@@ -96,7 +96,6 @@ export default function ProposalFormContent() {
           recipesMap.set(key, {
             ...recipe,
             fromProposal: prop.proposalName || prop.eventName || 'Unknown',
-            consultationLevel: prop.consultationLevel || 'Basic Consultation',
           });
         }
       });
@@ -110,7 +109,6 @@ export default function ProposalFormContent() {
     const currentProposalRecipes = recipes.map(r => ({
       ...r,
       fromProposal: 'This Proposal',
-      consultationLevel: formData.consultationLevel || 'Basic Consultation',
     }));
 
     // Combine with recipes from other proposals (avoiding exact duplicates by name)
@@ -131,34 +129,35 @@ export default function ProposalFormContent() {
     }
 
     return combined;
-  }, [allExistingRecipes, recipeSearchQuery, recipes, formData.consultationLevel]);
+  }, [allExistingRecipes, recipeSearchQuery, recipes]);
 
-  // Group filtered recipes by consultation level
+  // Group filtered recipes by proposal name
   const groupedExistingRecipes = useMemo(() => {
-    const groups = {
-      'Basic Consultation': [],
-      'Professional Consultation': [],
-      'Deluxe Consultation': [],
-    };
+    const groups = {};
 
+    // Put "This Proposal" first if it exists
     filteredExistingRecipes.forEach((recipe) => {
-      const level = recipe.consultationLevel || 'Basic Consultation';
-      if (groups[level]) {
-        groups[level].push(recipe);
-      } else {
-        groups['Basic Consultation'].push(recipe);
+      const proposalName = recipe.fromProposal || 'Unknown';
+      if (!groups[proposalName]) {
+        groups[proposalName] = [];
       }
+      groups[proposalName].push(recipe);
     });
 
-    return groups;
-  }, [filteredExistingRecipes]);
+    // Sort so "This Proposal" comes first, then alphabetically
+    const sortedGroups = {};
+    if (groups['This Proposal']) {
+      sortedGroups['This Proposal'] = groups['This Proposal'];
+    }
+    Object.keys(groups)
+      .filter(k => k !== 'This Proposal')
+      .sort()
+      .forEach(key => {
+        sortedGroups[key] = groups[key];
+      });
 
-  // Short labels for consultation levels
-  const LEVEL_LABELS = {
-    'Basic Consultation': 'Basic',
-    'Professional Consultation': 'Professional',
-    'Deluxe Consultation': 'Deluxe',
-  };
+    return sortedGroups;
+  }, [filteredExistingRecipes]);
 
   // Product search state (for Featured Blooms)
   const [bloomSearchQuery, setBloomSearchQuery] = useState('');
@@ -1484,15 +1483,15 @@ export default function ProposalFormContent() {
                           {recipeSearchQuery ? 'No recipes match your search' : 'No existing recipes found'}
                         </p>
                       ) : (
-                        Object.entries(groupedExistingRecipes).map(([level, levelRecipes]) => {
-                          if (levelRecipes.length === 0) return null;
+                        Object.entries(groupedExistingRecipes).map(([proposalName, proposalRecipes]) => {
+                          if (proposalRecipes.length === 0) return null;
                           return (
-                            <div key={level}>
-                              <p className="font-['Avenir:Heavy',sans-serif] text-[#4a9380] text-[11px] uppercase tracking-wide mb-[6px] pb-[4px] border-b border-[#eee]">
-                                {LEVEL_LABELS[level] || level} ({levelRecipes.length})
+                            <div key={proposalName}>
+                              <p className="font-['Avenir:Heavy',sans-serif] text-[#4a9380] text-[12px] mb-[6px] pb-[4px] border-b border-[#eee]">
+                                {proposalName} ({proposalRecipes.length})
                               </p>
                               <div className="flex flex-col gap-[6px]">
-                                {levelRecipes.map((recipe, idx) => (
+                                {proposalRecipes.map((recipe, idx) => (
                                   <div
                                     key={idx}
                                     onClick={() => handleSelectExistingRecipe(recipe)}
@@ -1514,9 +1513,6 @@ export default function ProposalFormContent() {
                                           {recipe.description}
                                         </p>
                                       )}
-                                      <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[10px]">
-                                        From: {recipe.fromProposal}
-                                      </p>
                                     </div>
                                   </div>
                                 ))}
