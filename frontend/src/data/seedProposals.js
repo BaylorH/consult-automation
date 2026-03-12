@@ -423,7 +423,7 @@ export const sampleProposals = [
         id: '4',
         name: 'Groomsmen Boutonniere',
         quantity: 4,
-        image: IMAGES.presentation.recipeGroomsmen,
+        image: IMAGES.presentation.recipeBoutonniere,
         description: 'Matching boutonnieres with subtle accents',
         ingredients: [
           { productHandle: 'quicksand-cream-roses', name: 'Quicksand Roses', count: 1 },
