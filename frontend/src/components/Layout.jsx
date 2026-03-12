@@ -23,32 +23,33 @@ export default function Layout({ children }) {
   const isNewProposal = location.pathname === '/proposal/new';
   const isOnDashboard = location.pathname === '/';
 
-  // Group proposals by consultation level
+  // Group proposals by consultant (author)
   const groupedProposals = useMemo(() => {
-    const groups = {
-      'Basic Consultation': [],
-      'Professional Consultation': [],
-      'Deluxe Consultation': [],
-    };
+    const groups = {};
 
     (proposals || []).forEach((proposal) => {
-      const level = proposal.consultationLevel || 'Basic Consultation';
-      if (groups[level]) {
-        groups[level].push(proposal);
-      } else {
-        groups['Basic Consultation'].push(proposal);
+      const author = proposal.author || 'Unknown';
+      if (!groups[author]) {
+        groups[author] = [];
       }
+      groups[author].push(proposal);
     });
 
-    return groups;
+    // Sort authors alphabetically
+    const sortedGroups = {};
+    Object.keys(groups).sort().forEach(key => {
+      sortedGroups[key] = groups[key];
+    });
+
+    return sortedGroups;
   }, [proposals]);
 
-  // Find which category the current proposal belongs to
+  // Find which category (consultant) the current proposal belongs to
   const currentProposalCategory = useMemo(() => {
     if (!currentProposalId) return null;
-    for (const [level, props] of Object.entries(groupedProposals)) {
+    for (const [author, props] of Object.entries(groupedProposals)) {
       if (props.some(p => p.id === currentProposalId)) {
-        return level;
+        return author;
       }
     }
     return null;
@@ -126,43 +127,32 @@ export default function Layout({ children }) {
           </p>
         </div>
 
-        {/* Proposals by Category */}
+        {/* Proposals by Consultant */}
         <div className="flex flex-col gap-[5px] w-full">
           <p className="px-[15px] font-['Avenir:Heavy',sans-serif] text-[#999] text-[10px] uppercase tracking-wide mb-[5px]">
-            By Consultation Level
+            By Consultant
           </p>
 
           {loading ? (
             <p className="px-[15px] font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">
               Loading...
             </p>
+          ) : Object.keys(groupedProposals).length === 0 ? (
+            <p className="px-[15px] font-['Avenir:Roman',sans-serif] text-[#999] text-[12px]">
+              No proposals yet
+            </p>
           ) : (
-            <>
+            Object.entries(groupedProposals).map(([author, authorProposals]) => (
               <CategorySection
-                label="Basic"
-                count={groupedProposals['Basic Consultation'].length}
-                proposals={groupedProposals['Basic Consultation']}
+                key={author}
+                label={author}
+                count={authorProposals.length}
+                proposals={authorProposals}
                 currentProposalId={currentProposalId}
-                isActiveCategory={currentProposalCategory === 'Basic Consultation'}
+                isActiveCategory={currentProposalCategory === author}
                 onSelectProposal={(id) => navigate(`/proposal/${id}`)}
               />
-              <CategorySection
-                label="Professional"
-                count={groupedProposals['Professional Consultation'].length}
-                proposals={groupedProposals['Professional Consultation']}
-                currentProposalId={currentProposalId}
-                isActiveCategory={currentProposalCategory === 'Professional Consultation'}
-                onSelectProposal={(id) => navigate(`/proposal/${id}`)}
-              />
-              <CategorySection
-                label="Deluxe"
-                count={groupedProposals['Deluxe Consultation'].length}
-                proposals={groupedProposals['Deluxe Consultation']}
-                currentProposalId={currentProposalId}
-                isActiveCategory={currentProposalCategory === 'Deluxe Consultation'}
-                onSelectProposal={(id) => navigate(`/proposal/${id}`)}
-              />
-            </>
+            ))
           )}
         </div>
       </div>
@@ -193,7 +183,7 @@ function CategorySection({ label, count, proposals, currentProposalId, isActiveC
           isActiveCategory ? 'bg-[#e8f5f1]' : 'hover:bg-[#e6e6e6]'
         }`}
       >
-        <p className={`flex-1 font-['Nunito_Sans:Bold',sans-serif] font-bold leading-[normal] text-[12px] uppercase ${
+        <p className={`flex-1 font-['Nunito_Sans:Bold',sans-serif] font-bold leading-[normal] text-[12px] ${
           isActiveCategory ? 'text-[#4a9380]' : 'text-[#666]'
         }`}>
           {label} ({count})

@@ -348,7 +348,7 @@ export const sampleProposals = [
     typeColor: TYPE_COLORS['Wedding'],
     eventName: "Lucia and Gabby said 'I Do'",
     cardImage: IMAGES.presentation.inspiration1,
-    author: 'Baylor Harrison',
+    author: 'Becky Memmo',
 
     // Form fields
     customerName: 'Lucia & Gabby Martinez-Chen',
