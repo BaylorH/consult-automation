@@ -33,7 +33,14 @@ export default function DevTools() {
 
       // Re-seed
       await seedProposals();
-      setMessage('Done! Refresh the page to see updated proposals.');
+
+      // Clear session storage cache so dashboard fetches fresh data
+      sessionStorage.clear();
+
+      setMessage('Done! Refreshing...');
+
+      // Auto-refresh the page after a brief delay
+      setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       setMessage(`Error: ${error.message}`);
     } finally {

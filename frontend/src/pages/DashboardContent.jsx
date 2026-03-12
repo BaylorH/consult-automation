@@ -17,13 +17,18 @@ export default function DashboardContent() {
   // Format Firestore timestamp to display string
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    // Handle Firestore Timestamp object
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      // Handle Firestore Timestamp object
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return '';
+    }
   };
 
   return (
@@ -79,7 +84,7 @@ export default function DashboardContent() {
               typeColor={proposal.typeColor}
               title={proposal.eventName}
               image={proposal.cardImage}
-              date={formatDate(proposal.updatedAt)}
+              date={formatDate(proposal.eventDate)}
               author={proposal.author}
               onEdit={() => navigate(`/proposal/${proposal.id}`)}
             />
@@ -105,7 +110,7 @@ function ProposalCard({ type, typeColor, title, image, date, author, onEdit }) {
         <img alt="" className="max-w-none object-cover h-[200px]" src={image} />
       </div>
       <div className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
-        <p className="mb-0">Updated: {date}</p>
+        <p className="mb-0">Event: {date}</p>
         <p>by: {author}</p>
       </div>
       <div className="flex gap-[5px]">

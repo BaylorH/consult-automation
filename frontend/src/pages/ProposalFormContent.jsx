@@ -1,9 +1,9 @@
 // ProposalFormContent - Main content only (Layout provides sidebar)
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ShoppingList from '../components/ShoppingList';
 import BasicFloralRecipes from '../components/BasicFloralRecipes';
-import { useProposal, proposalService } from '../hooks/useProposals';
+import { useProposal, useProposals, proposalService } from '../hooks/useProposals';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
 
 // Local image assets (downloaded from Figma)
@@ -59,20 +59,72 @@ export default function ProposalFormContent() {
   const [proposalId, setProposalId] = useState(id === 'new' ? null : id);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saved', 'saving', 'unsaved', 'error'
   const [hasInitialized, setHasInitialized] = useState(false);
+  const justLoadedRef = useRef(false); // Flag to skip auto-save after loading
   const saveTimeoutRef = useRef(null);
   const AUTOSAVE_DELAY = 1500; // 1.5 seconds after last change
 
   // Create Recipe form state
   const [showCreateRecipe, setShowCreateRecipe] = useState(false);
+  const [editingRecipeId, setEditingRecipeId] = useState(null); // null = creating new, otherwise editing
   const [newRecipe, setNewRecipe] = useState({
     name: '',
     quantity: 1,
     description: '',
     ingredients: [
-      { item: '', stems: '' }
+      { item: '', productHandle: '', stems: '' }
     ],
     photoUrl: '',
   });
+
+  // Recipe choice modal state
+  const [showRecipeChoiceModal, setShowRecipeChoiceModal] = useState(false);
+  const [showExistingRecipes, setShowExistingRecipes] = useState(false);
+  const [recipeSearchQuery, setRecipeSearchQuery] = useState('');
+
+  // Fetch all proposals to extract all recipes
+  const { proposals: allProposals } = useProposals();
+
+  // Extract all unique recipes from all proposals
+  const allExistingRecipes = useMemo(() => {
+    const recipesMap = new Map();
+    (allProposals || []).forEach((prop) => {
+      (prop.recipes || []).forEach((recipe) => {
+        // Use recipe name as key to deduplicate
+        const key = recipe.name?.toLowerCase().trim();
+        if (key && !recipesMap.has(key)) {
+          recipesMap.set(key, {
+            ...recipe,
+            fromProposal: prop.proposalName || prop.eventName || 'Unknown',
+          });
+        }
+      });
+    });
+    return Array.from(recipesMap.values());
+  }, [allProposals]);
+
+  // Filter recipes based on search and exclude ones already in this proposal
+  const filteredExistingRecipes = useMemo(() => {
+    // Get names of recipes already in current proposal
+    const currentRecipeNames = new Set(
+      recipes.map(r => r.name?.toLowerCase().trim()).filter(Boolean)
+    );
+
+    // Filter out recipes already in this proposal
+    let filtered = allExistingRecipes.filter(
+      (r) => !currentRecipeNames.has(r.name?.toLowerCase().trim())
+    );
+
+    // Apply search filter
+    if (recipeSearchQuery.trim()) {
+      const query = recipeSearchQuery.toLowerCase();
+      filtered = filtered.filter((r) =>
+        r.name?.toLowerCase().includes(query) ||
+        r.description?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [allExistingRecipes, recipeSearchQuery, recipes]);
 
   // Product search state (for Featured Blooms)
   const [bloomSearchQuery, setBloomSearchQuery] = useState('');
@@ -92,6 +144,7 @@ export default function ProposalFormContent() {
   const colorInputRef = useRef(null);
   const imageModalRef = useRef(null);
   const colorPickerRef = useRef(null);
+  const recipeFormRef = useRef(null);
 
   // Preset color swatches for quick selection
   const presetColors = [
@@ -106,8 +159,13 @@ export default function ProposalFormContent() {
       // Convert Firestore timestamps to date strings for input fields
       const formatDateForInput = (timestamp) => {
         if (!timestamp) return '';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        try {
+          const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+          if (isNaN(date.getTime())) return ''; // Invalid date
+          return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        } catch {
+          return '';
+        }
       };
 
       setFormData({
@@ -135,7 +193,10 @@ export default function ProposalFormContent() {
         setRecipes(proposal.recipes);
       }
       // Mark as initialized after loading existing data
+      // Set status to 'saved' since we're loading existing data, not making changes
+      justLoadedRef.current = true;
       setHasInitialized(true);
+      setSaveStatus('saved');
     }
   }, [proposal]);
 
@@ -196,6 +257,12 @@ export default function ProposalFormContent() {
     // Don't auto-save until we've initialized (loaded existing data or confirmed new)
     if (!hasInitialized) return;
 
+    // Skip auto-save if we just loaded data (this is not a real change)
+    if (justLoadedRef.current) {
+      justLoadedRef.current = false;
+      return;
+    }
+
     // Only mark as unsaved if there's actual content
     if (hasContent) {
       setSaveStatus('unsaved');
@@ -254,29 +321,97 @@ export default function ProposalFormContent() {
   };
 
   const handleSaveRecipe = () => {
-    // Create new recipe object
+    // Create recipe object
     const recipe = {
-      id: Date.now().toString(),
+      id: editingRecipeId || Date.now().toString(),
       name: newRecipe.name,
       quantity: newRecipe.quantity,
       description: newRecipe.description,
       image: newRecipe.photoUrl || '',
       ingredients: newRecipe.ingredients
         .filter(ing => ing.item && ing.stems)
-        .map(ing => ({ name: ing.item, count: ing.stems }))
+        .map(ing => ({
+          name: ing.item,
+          productHandle: ing.productHandle || '',
+          count: ing.stems
+        }))
     };
 
-    setRecipes(prev => [...prev, recipe]);
+    if (editingRecipeId) {
+      // Update existing recipe
+      setRecipes(prev => prev.map(r => r.id === editingRecipeId ? recipe : r));
+    } else {
+      // Add new recipe
+      setRecipes(prev => [...prev, recipe]);
+    }
 
     // Reset form
     setNewRecipe({
       name: '',
       quantity: 1,
       description: '',
-      ingredients: [{ item: '', stems: '' }],
+      ingredients: [{ item: '', productHandle: '', stems: '' }],
       photoUrl: '',
     });
+    setEditingRecipeId(null);
     setShowCreateRecipe(false);
+  };
+
+  const handleEditRecipe = (recipeId) => {
+    const recipe = recipes.find(r => r.id === recipeId);
+    if (!recipe) return;
+
+    // Populate form with existing recipe data
+    setNewRecipe({
+      name: recipe.name || '',
+      quantity: recipe.quantity || 1,
+      description: recipe.description || '',
+      ingredients: recipe.ingredients && recipe.ingredients.length > 0
+        ? recipe.ingredients.map(ing => ({
+            item: ing.name || '',
+            productHandle: ing.productHandle || '',
+            stems: String(ing.count || '')
+          }))
+        : [{ item: '', productHandle: '', stems: '' }],
+      photoUrl: recipe.image || '',
+    });
+    setEditingRecipeId(recipeId);
+    setShowCreateRecipe(true);
+
+    // Scroll to recipe form after state updates
+    setTimeout(() => {
+      recipeFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const handleRemoveRecipe = (recipeId) => {
+    setRecipes(prev => prev.filter(r => r.id !== recipeId));
+  };
+
+  // Handle selecting an existing recipe to use as template
+  const handleSelectExistingRecipe = (recipe) => {
+    setNewRecipe({
+      name: recipe.name || '',
+      quantity: recipe.quantity || 1,
+      description: recipe.description || '',
+      ingredients: recipe.ingredients && recipe.ingredients.length > 0
+        ? recipe.ingredients.map(ing => ({
+            item: ing.name || '',
+            productHandle: ing.productHandle || '',
+            stems: String(ing.count || '')
+          }))
+        : [{ item: '', productHandle: '', stems: '' }],
+      photoUrl: recipe.image || '',
+    });
+    setShowExistingRecipes(false);
+    setShowRecipeChoiceModal(false);
+    setRecipeSearchQuery('');
+    setShowCreateRecipe(true);
+
+    // Scroll to recipe form
+    setTimeout(() => {
+      recipeFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   // Product search handlers (Featured Blooms)
@@ -295,7 +430,9 @@ export default function ProposalFormContent() {
       // Create featured bloom with variant options
       const newBloom = {
         name: fullProduct.title,
-        handle: fullProduct.handle,
+        productHandle: fullProduct.handle, // Use productHandle for consistency with seed data
+        handle: fullProduct.handle, // Keep handle as fallback
+        category: fullProduct.category || null,
         image: fullProduct.featuredImage || fullProduct.images?.[0] || '',
         selectedOption: 0,
         options: fullProduct.variants.map(variant => ({
@@ -572,9 +709,9 @@ export default function ProposalFormContent() {
         {proposalId && (
           <button
             onClick={handleDeleteProposal}
-            className="font-['Avenir:Medium',sans-serif] text-[12px] text-[#999] hover:text-[#e74c3c] cursor-pointer transition-colors"
+            className="btn-danger"
           >
-            Delete
+            Delete Proposal
           </button>
         )}
       </div>
@@ -1020,7 +1157,7 @@ export default function ProposalFormContent() {
             </div>
           </div>
 
-          {/* Current Proposal Inventory */}
+          {/* Current Proposal Inventory - Grouped by Category */}
           {featuredBlooms.length === 0 ? (
             <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
               <div className="size-[20px]">
@@ -1033,59 +1170,84 @@ export default function ProposalFormContent() {
           ) : (
             <div className="border border-[#f1f1f1] border-solid flex flex-col gap-[15px] p-[30px] rounded-[5px] w-full">
               <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px] h-[30px]">
-                Current Proposal Inventory:
+                {isProfessional ? 'Featured Blooms Palette:' : 'Shopping List:'}
               </p>
-              {featuredBlooms.map((bloom, bloomIndex) => (
-                <div key={bloomIndex} className="bg-white border border-[#ccc] border-solid flex gap-[30px] items-start p-[15px] rounded-[5px] w-[854px]">
-                  <div className="flex gap-[30px] items-start w-[715px]">
-                    {bloom.image && (
-                      <div className="size-[92px] shrink-0">
-                        <img alt={bloom.name} className="object-cover size-full" src={bloom.image} />
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-[10px] w-[635px]">
-                      <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[16px] uppercase">
-                        {bloom.name}
+
+              {/* Group blooms by category */}
+              {['Focal Flowers', 'Filler Flowers', 'Line Flowers', 'Greenery'].map((category) => {
+                const categoryBlooms = featuredBlooms
+                  .map((bloom, index) => ({ ...bloom, originalIndex: index }))
+                  .filter((bloom) => bloom.category === category);
+
+                if (categoryBlooms.length === 0) return null;
+
+                return (
+                  <div key={category} className="flex flex-col gap-[10px]">
+                    {/* Category Header */}
+                    <div className="flex items-center gap-[10px] mt-[10px]">
+                      <p className="font-['Avenir:Heavy',sans-serif] text-[#4a9380] text-[14px] uppercase tracking-wide">
+                        {category}
                       </p>
-                      <div className="flex flex-col">
-                        {bloom.options ? (
-                          bloom.options.map((option, optIndex) => (
-                            <div
-                              key={optIndex}
-                              onClick={() => handleBloomOptionChange(bloomIndex, optIndex)}
-                              className="flex gap-[10px] items-center py-[5px] rounded-[37px] w-[424px] cursor-pointer hover:bg-[#f9f9f9]"
-                            >
-                              <div
-                                className={`border border-[#999] border-solid size-[15px] ${
-                                  (bloom.selectedOption ?? 0) === optIndex ? 'bg-[#333]' : 'bg-white'
-                                }`}
-                              />
-                              <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] flex-1">
-                                {option.label} - ${option.price.toFixed(2)}
-                              </p>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="flex gap-[10px] items-center py-[5px]">
-                            <div className="bg-[#333] border border-[#999] border-solid size-[15px]" />
-                            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
-                              {bloom.stemCount} Stems - ${(bloom.stemCount * bloom.pricePerStem).toFixed(2)}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      <div className="flex-1 h-[1px] bg-[#e0e0e0]" />
                     </div>
+
+                    {/* Blooms in this category */}
+                    {categoryBlooms.map((bloom) => (
+                      <div key={bloom.originalIndex} className="bg-white border border-[#ccc] border-solid flex gap-[30px] items-start p-[15px] rounded-[5px]">
+                        <div className="flex gap-[30px] items-start flex-1">
+                          {bloom.image && (
+                            <div className="size-[92px] shrink-0">
+                              <img alt={bloom.name} className="object-cover size-full rounded-[5px]" src={bloom.image} />
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-[10px] flex-1">
+                            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[16px] uppercase">
+                              {bloom.name}
+                            </p>
+
+                            {/* Only show quantity selector for Basic consultation */}
+                            {!isProfessional && bloom.options && (
+                              <div className="flex flex-col">
+                                {bloom.options.map((option, optIndex) => (
+                                  <div
+                                    key={optIndex}
+                                    onClick={() => handleBloomOptionChange(bloom.originalIndex, optIndex)}
+                                    className="flex gap-[10px] items-center py-[5px] rounded-[37px] w-[424px] cursor-pointer hover:bg-[#f9f9f9]"
+                                  >
+                                    <div
+                                      className={`border border-[#999] border-solid size-[15px] ${
+                                        (bloom.selectedOption ?? 0) === optIndex ? 'bg-[#333]' : 'bg-white'
+                                      }`}
+                                    />
+                                    <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] flex-1">
+                                      {option.label} - ${option.price.toFixed(2)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* For Professional, just show product type */}
+                            {isProfessional && bloom.productType && (
+                              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px]">
+                                {bloom.productType}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end px-[15px] py-[10px]">
+                          <button
+                            onClick={() => handleRemoveBloom(bloom.originalIndex)}
+                            className="btn-danger-outline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-start justify-end px-[15px] py-[5px]">
-                    <button
-                      onClick={() => handleRemoveBloom(bloomIndex)}
-                      className="border border-[#ccc] border-solid flex items-center justify-center p-[5px] cursor-pointer hover:bg-[#fafafa] bg-white"
-                    >
-                      <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">Remove</p>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1116,6 +1278,11 @@ export default function ProposalFormContent() {
                     <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[16px]">
                       {recipe.name} x {recipe.quantity}
                     </p>
+                    {recipe.description && (
+                      <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] line-clamp-2">
+                        {recipe.description}
+                      </p>
+                    )}
                     {recipe.ingredients && recipe.ingredients.length > 0 && (
                       <ul className="list-disc pl-[18px] font-['Avenir:Roman',sans-serif] text-[#333] text-[12px] h-[75px]">
                         {recipe.ingredients.map((ing, idx) => (
@@ -1125,12 +1292,18 @@ export default function ProposalFormContent() {
                         ))}
                       </ul>
                     )}
-                    <div className="flex gap-[5px] items-center justify-center px-[15px] py-[5px]">
-                      <button className="border border-[#ccc] border-solid px-[10px] py-[5px] font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] cursor-pointer hover:bg-[#fafafa]">
+                    <div className="flex gap-[10px] items-center justify-center px-[15px] py-[10px]">
+                      <button
+                        onClick={() => handleEditRecipe(recipe.id)}
+                        className="btn-action-outline"
+                      >
                         Edit Recipe
                       </button>
-                      <button className="border border-[#ccc] border-solid px-[10px] py-[5px] font-['Avenir:Roman',sans-serif] text-[#333] text-[14px] cursor-pointer hover:bg-[#fafafa]">
-                        Remove Recipe
+                      <button
+                        onClick={() => handleRemoveRecipe(recipe.id)}
+                        className="btn-danger-outline"
+                      >
+                        Remove
                       </button>
                     </div>
                   </div>
@@ -1138,21 +1311,134 @@ export default function ProposalFormContent() {
               </div>
             )}
 
-            {/* Add Another Recipe Button */}
-            <button
-              onClick={() => setShowCreateRecipe(!showCreateRecipe)}
-              className="border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] cursor-pointer hover:bg-[#fafafa] w-fit bg-white"
-            >
-              <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
-                {showCreateRecipe ? 'Cancel' : (recipes.length > 0 ? 'Add Another Recipe' : 'Add Floral Recipe')}
-              </p>
-            </button>
+            {/* Add Another Recipe Button - hide when form is open */}
+            {!showCreateRecipe && !showRecipeChoiceModal && (
+              <button
+                onClick={() => setShowRecipeChoiceModal(true)}
+                className="btn-action"
+              >
+                {recipes.length > 0 ? '+ Add Another Recipe' : '+ Add Floral Recipe'}
+              </button>
+            )}
 
-            {/* Create Recipe Form - matching Figma MCP */}
+            {/* Recipe Choice Modal */}
+            {showRecipeChoiceModal && !showCreateRecipe && (
+              <div className="border border-[#ccc] border-solid flex flex-col gap-[15px] p-[20px] rounded-[5px] bg-white shadow-md w-full max-w-[500px]">
+                {!showExistingRecipes ? (
+                  <>
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[16px]">
+                      How would you like to add a recipe?
+                    </p>
+                    <div className="flex flex-col gap-[10px]">
+                      <button
+                        onClick={() => {
+                          setShowRecipeChoiceModal(false);
+                          setShowCreateRecipe(true);
+                        }}
+                        className="border border-[#4a9380] border-solid flex items-center gap-[10px] px-[15px] py-[12px] rounded-[5px] cursor-pointer hover:bg-[#e8f5f1] bg-white text-left"
+                      >
+                        <span className="text-[20px]">✨</span>
+                        <div>
+                          <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Create from Scratch</p>
+                          <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px]">Build a new recipe with custom ingredients</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setShowExistingRecipes(true)}
+                        className="border border-[#ccc] border-solid flex items-center gap-[10px] px-[15px] py-[12px] rounded-[5px] cursor-pointer hover:bg-[#fafafa] bg-white text-left"
+                      >
+                        <span className="text-[20px]">📋</span>
+                        <div>
+                          <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">Choose from Existing</p>
+                          <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px]">
+                            Use a recipe from another proposal ({filteredExistingRecipes.length} available)
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setShowRecipeChoiceModal(false)}
+                      className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] hover:text-[#333] mt-[5px]"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[16px]">
+                        Choose an Existing Recipe
+                      </p>
+                      <button
+                        onClick={() => setShowExistingRecipes(false)}
+                        className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] hover:text-[#333]"
+                      >
+                        ← Back
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={recipeSearchQuery}
+                      onChange={(e) => setRecipeSearchQuery(e.target.value)}
+                      placeholder="Search recipes..."
+                      className="border border-[#ccc] border-solid rounded-[5px] px-[10px] py-[8px] w-full font-['Avenir:Roman',sans-serif] text-[14px] outline-none"
+                    />
+                    <div className="flex flex-col gap-[8px] max-h-[300px] overflow-y-auto">
+                      {filteredExistingRecipes.length === 0 ? (
+                        <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] py-[20px] text-center">
+                          {recipeSearchQuery ? 'No recipes match your search' : 'No existing recipes found'}
+                        </p>
+                      ) : (
+                        filteredExistingRecipes.map((recipe, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => handleSelectExistingRecipe(recipe)}
+                            className="border border-[#eee] border-solid flex items-center gap-[10px] p-[10px] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] hover:border-[#4a9380]"
+                          >
+                            {recipe.image && (
+                              <img
+                                src={recipe.image}
+                                alt={recipe.name}
+                                className="w-[50px] h-[50px] object-cover rounded-[3px]"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[14px]">
+                                {recipe.name}
+                              </p>
+                              {recipe.description && (
+                                <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[11px] line-clamp-1">
+                                  {recipe.description}
+                                </p>
+                              )}
+                              <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[10px]">
+                                From: {recipe.fromProposal}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowExistingRecipes(false);
+                        setShowRecipeChoiceModal(false);
+                        setRecipeSearchQuery('');
+                      }}
+                      className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] hover:text-[#333]"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Create/Edit Recipe Form - matching Figma MCP */}
             {showCreateRecipe && (
-              <div className="border border-[#ccc] border-solid flex flex-col gap-[30px] p-[15px] rounded-[5px] w-full">
+              <div ref={recipeFormRef} className="border border-[#ccc] border-solid flex flex-col gap-[30px] p-[15px] rounded-[5px] w-full">
                 <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
-                  Create Recipe
+                  {editingRecipeId ? 'Edit Recipe' : 'Create Recipe'}
                 </p>
 
                 {/* Recipe Name and Count */}
@@ -1239,44 +1525,39 @@ export default function ProposalFormContent() {
                       <div key={index} className="flex gap-[15px] items-end w-full">
                         <div className="w-[625px]">
                           <select
-                            value={ingredient.item}
-                            onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                            value={ingredient.productHandle || ingredient.item}
+                            onChange={(e) => {
+                              const selectedHandle = e.target.value;
+                              const selectedBloom = featuredBlooms.find(b => b.productHandle === selectedHandle || b.handle === selectedHandle);
+                              updateIngredient(index, 'item', selectedBloom?.name || selectedHandle);
+                              updateIngredient(index, 'productHandle', selectedHandle);
+                            }}
                             className="border border-[#ccc] border-solid rounded-[5px] h-[30px] px-[15px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none cursor-pointer bg-white"
                           >
-                            <option value="">Select a flower...</option>
-                            <option value="Quicksand Cream Roses">Quicksand Cream Roses</option>
-                            <option value="Antique Mauve Fresh Cut Roses">Antique Mauve Fresh Cut Roses</option>
-                            <option value="Creamy White Bulk Spray Roses">Creamy White Bulk Spray Roses</option>
-                            <option value="Gunnii Eucalyptus Greens">Gunnii Eucalyptus Greens</option>
-                            <option value="Blue Tinted Roses">Blue Tinted Roses</option>
-                            <option value="Silver Dollar Eucalyptus Greens">Silver Dollar Eucalyptus Greens</option>
+                            <option value="">Select a flower from Featured Blooms...</option>
+                            {featuredBlooms.map((bloom, bloomIdx) => (
+                              <option key={bloomIdx} value={bloom.productHandle || bloom.handle}>
+                                {bloom.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="w-[110px]">
-                          <select
+                          <input
+                            type="number"
+                            min="1"
                             value={ingredient.stems}
                             onChange={(e) => updateIngredient(index, 'stems', e.target.value)}
-                            className="border border-[#ccc] border-solid rounded-[5px] h-[30px] px-[15px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none cursor-pointer bg-white"
-                          >
-                            <option value="">Stems</option>
-                            <option value="1">1 Stem</option>
-                            <option value="2">2 Stems</option>
-                            <option value="3">3 Stems</option>
-                            <option value="4">4 Stems</option>
-                            <option value="5">5 Stems</option>
-                            <option value="1/4">1/4 Bunch</option>
-                            <option value="1/2">1/2 Bunch</option>
-                            <option value="1 Bunch">1 Bunch</option>
-                          </select>
+                            placeholder="Qty"
+                            className="border border-[#ccc] border-solid rounded-[5px] h-[30px] px-[15px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none bg-white"
+                          />
                         </div>
                         <div className="flex h-[30px] items-center justify-center py-[5px]">
                           <button
                             onClick={() => removeIngredient(index)}
-                            className="bg-[rgba(238,238,238,0.8)] border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] cursor-pointer hover:bg-[#e6e6e6]"
+                            className="btn-danger-outline text-[13px] py-[4px] px-[12px]"
                           >
-                            <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[13px]">
-                              Remove
-                            </p>
+                            Remove
                           </button>
                         </div>
                       </div>
@@ -1286,11 +1567,9 @@ export default function ProposalFormContent() {
                     <div className="flex items-end w-full">
                       <button
                         onClick={addIngredient}
-                        className="bg-[rgba(238,238,238,0.8)] border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] cursor-pointer hover:bg-[#e6e6e6]"
+                        className="btn-action-outline text-[13px] py-[4px] px-[12px]"
                       >
-                        <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[13px]">
-                          + Add Ingredient
-                        </p>
+                        + Add Ingredient
                       </button>
                     </div>
                   </div>
@@ -1324,40 +1603,49 @@ export default function ProposalFormContent() {
                     )}
 
                     {/* Photo Buttons */}
-                    <div className="flex flex-col gap-[15px] items-start justify-center w-[139px]">
-                      <button className="bg-[rgba(238,238,238,0.8)] border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] w-full cursor-pointer hover:bg-[#e6e6e6]">
-                        <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[13px]">
-                          Upload Photo
-                        </p>
+                    <div className="flex flex-col gap-[10px] items-start justify-center w-[150px]">
+                      <button className="btn-action-outline w-full text-[13px] py-[6px]">
+                        Upload Photo
                       </button>
-                      <div className="flex flex-col gap-[5px] w-full">
-                        <input
-                          type="text"
-                          value={newRecipe.photoUrl}
-                          onChange={(e) => updateNewRecipe('photoUrl', e.target.value)}
-                          placeholder="Paste image URL..."
-                          className="border border-[#ccc] border-solid rounded-[3px] px-[10px] py-[5px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] outline-none"
-                        />
-                      </div>
-                      <button className="bg-[rgba(238,238,238,0.8)] border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] w-full cursor-pointer hover:bg-[#e6e6e6]">
-                        <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[13px]">
-                          Create via AI
-                        </p>
+                      <input
+                        type="text"
+                        value={newRecipe.photoUrl}
+                        onChange={(e) => updateNewRecipe('photoUrl', e.target.value)}
+                        placeholder="Paste image URL..."
+                        className="border border-[#ccc] border-solid rounded-[4px] px-[10px] py-[6px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] outline-none"
+                      />
+                      <button className="btn-action-outline w-full text-[13px] py-[6px]">
+                        Create via AI
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Save Recipe Button */}
-                <div className="flex items-end w-full">
+                {/* Save/Cancel Recipe Buttons */}
+                <div className="flex items-end gap-[10px] w-full">
                   <button
                     onClick={handleSaveRecipe}
                     disabled={!newRecipe.name}
-                    className="bg-[rgba(238,238,238,0.8)] border border-[#ccc] border-solid flex items-center justify-center px-[15px] py-[5px] cursor-pointer hover:bg-[#e6e6e6] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-action disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[13px]">
-                      Save Recipe
-                    </p>
+                    Save Recipe
+                  </button>
+                  <button
+                    onClick={() => {
+                      setNewRecipe({
+                        name: '',
+                        quantity: 1,
+                        description: '',
+                        ingredients: [{ item: '', productHandle: '', stems: '' }],
+                        photoUrl: '',
+                      });
+                      setEditingRecipeId(null);
+                      setShowCreateRecipe(false);
+                    }}
+                    className="btn-action-outline"
+                    style={{ color: '#666', borderColor: '#ccc' }}
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -1366,23 +1654,39 @@ export default function ProposalFormContent() {
         )}
 
         {/* Shopping List */}
-        {recipes.length > 0 ? (
-          <ShoppingList recipes={recipes} featuredBlooms={featuredBlooms} />
-        ) : (
-          <div className="bg-white border border-[#eef0ef] border-solid flex flex-col gap-[30px] p-[30px] rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)]">
-            <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
-              Shopping List
-            </p>
-            <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
-              <div className="size-[20px]">
-                <InfoIcon />
-              </div>
-              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
-                Your shopping list will appear once you add recipes.
+        {(() => {
+          const isBasic = formData.consultationLevel === 'Basic Consultation';
+          const showShoppingList = recipes.length > 0 || (isBasic && featuredBlooms.length > 0);
+
+          if (showShoppingList) {
+            return (
+              <ShoppingList
+                recipes={recipes}
+                featuredBlooms={featuredBlooms}
+                isBasicConsultation={isBasic}
+              />
+            );
+          }
+
+          return (
+            <div className="bg-white border border-[#eef0ef] border-solid flex flex-col gap-[30px] p-[30px] rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)]">
+              <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
+                Shopping List
               </p>
+              <div className="border border-[#999] border-solid flex gap-[10px] items-center px-[15px] py-[10px] rounded-[26px]">
+                <div className="size-[20px]">
+                  <InfoIcon />
+                </div>
+                <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[16px]">
+                  {isBasic
+                    ? 'Your shopping list will appear once you add featured blooms.'
+                    : 'Your shopping list will appear once you add recipes.'
+                  }
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
