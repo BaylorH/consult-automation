@@ -287,7 +287,18 @@ export default function ProposalFormContent() {
   }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, hasInitialized, saveProposal, hasContent]);
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+
+      // Auto-fill delivery date to 3 days before event date (if delivery date is empty)
+      if (field === 'eventDate' && value && !prev.deliveryDate) {
+        const eventDate = new Date(value);
+        eventDate.setDate(eventDate.getDate() - 3);
+        updated.deliveryDate = eventDate.toISOString().split('T')[0];
+      }
+
+      return updated;
+    });
   };
 
   const isProfessional = formData.consultationLevel === 'Professional Consultation' || formData.consultationLevel === 'Deluxe Consultation';

@@ -39,6 +39,7 @@ const IMAGES = {
     recipeBridal: '/images/presentation/recipe-bride-bouquet.png',
     recipeBridesmaids: '/images/presentation/recipe-bridesmaid.png',
     recipeBoutonniere: '/images/presentation/recipe-boutonniere.png',
+    recipeGroomsmen: '/images/presentation/recipe-groomsmen.png',
     recipeCenterpiece: '/images/presentation/recipe-centerpiece.png',
   },
 };
@@ -422,7 +423,7 @@ export const sampleProposals = [
         id: '4',
         name: 'Groomsmen Boutonniere',
         quantity: 4,
-        image: IMAGES.presentation.recipeBoutonniere,
+        image: IMAGES.presentation.recipeGroomsmen,
         description: 'Matching boutonnieres with subtle accents',
         ingredients: [
           { productHandle: 'quicksand-cream-roses', name: 'Quicksand Roses', count: 1 },
@@ -584,6 +585,12 @@ export const sampleProposals = [
     eventDate: Timestamp.fromDate(new Date('2026-04-05')),
     deliveryDate: Timestamp.fromDate(new Date('2026-04-04')),
     styleNotes: 'Fun and flirty vibe. Pink and gold color scheme.',
+
+    // Inspiration images - card image is first
+    inspirationImages: [
+      IMAGES.proposalCards.card2,
+    ],
+
     colorPalette: ['#ff69b4', '#ffd700', '#fff0f5'],
 
     // Basic consultation - featuredBlooms WITH selectedOption (quantity chosen)
