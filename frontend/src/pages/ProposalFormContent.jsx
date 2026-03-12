@@ -103,28 +103,32 @@ export default function ProposalFormContent() {
     return Array.from(recipesMap.values());
   }, [allProposals]);
 
-  // Filter recipes based on search and exclude ones already in this proposal
+  // Combine current proposal recipes + all existing recipes from other proposals
   const filteredExistingRecipes = useMemo(() => {
-    // Get names of recipes already in current proposal
-    const currentRecipeNames = new Set(
-      recipes.map(r => r.name?.toLowerCase().trim()).filter(Boolean)
+    // Start with recipes from current proposal (marked as such)
+    const currentProposalRecipes = recipes.map(r => ({
+      ...r,
+      fromProposal: 'This Proposal',
+    }));
+
+    // Combine with recipes from other proposals (avoiding exact duplicates by name)
+    const currentNames = new Set(recipes.map(r => r.name?.toLowerCase().trim()).filter(Boolean));
+    const otherRecipes = allExistingRecipes.filter(
+      r => !currentNames.has(r.name?.toLowerCase().trim())
     );
 
-    // Filter out recipes already in this proposal
-    let filtered = allExistingRecipes.filter(
-      (r) => !currentRecipeNames.has(r.name?.toLowerCase().trim())
-    );
+    let combined = [...currentProposalRecipes, ...otherRecipes];
 
     // Apply search filter
     if (recipeSearchQuery.trim()) {
       const query = recipeSearchQuery.toLowerCase();
-      filtered = filtered.filter((r) =>
+      combined = combined.filter((r) =>
         r.name?.toLowerCase().includes(query) ||
         r.description?.toLowerCase().includes(query)
       );
     }
 
-    return filtered;
+    return combined;
   }, [allExistingRecipes, recipeSearchQuery, recipes]);
 
   // Product search state (for Featured Blooms)
@@ -357,7 +361,25 @@ export default function ProposalFormContent() {
     }));
   };
 
+  // Recipe name error state
+  const [recipeNameError, setRecipeNameError] = useState('');
+
   const handleSaveRecipe = () => {
+    // Check for unique name within this proposal
+    const newNameLower = newRecipe.name?.toLowerCase().trim();
+    const isDuplicate = recipes.some(r => {
+      // Skip the recipe being edited
+      if (editingRecipeId && r.id === editingRecipeId) return false;
+      return r.name?.toLowerCase().trim() === newNameLower;
+    });
+
+    if (isDuplicate) {
+      setRecipeNameError('A recipe with this name already exists in this proposal. Please use a unique name.');
+      return;
+    }
+
+    setRecipeNameError('');
+
     // Create recipe object
     const recipe = {
       id: editingRecipeId || Date.now().toString(),
@@ -392,6 +414,7 @@ export default function ProposalFormContent() {
     });
     setEditingRecipeId(null);
     setShowCreateRecipe(false);
+    setRecipeNameError('');
   };
 
   const handleEditRecipe = (recipeId) => {
@@ -1487,10 +1510,20 @@ export default function ProposalFormContent() {
                     <input
                       type="text"
                       value={newRecipe.name}
-                      onChange={(e) => updateNewRecipe('name', e.target.value)}
+                      onChange={(e) => {
+                        updateNewRecipe('name', e.target.value);
+                        if (recipeNameError) setRecipeNameError(''); // Clear error on edit
+                      }}
                       placeholder="Bridal Bouquet"
-                      className="border border-[#ccc] border-solid rounded-[5px] px-[15px] py-[11px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[16px] outline-none"
+                      className={`border border-solid rounded-[5px] px-[15px] py-[11px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[16px] outline-none ${
+                        recipeNameError ? 'border-[#e74c3c]' : 'border-[#ccc]'
+                      }`}
                     />
+                    {recipeNameError && (
+                      <p className="font-['Avenir:Roman',sans-serif] text-[#e74c3c] text-[12px]">
+                        {recipeNameError}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-[5px] w-[200px]">
                     <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
@@ -1678,6 +1711,7 @@ export default function ProposalFormContent() {
                       });
                       setEditingRecipeId(null);
                       setShowCreateRecipe(false);
+                      setRecipeNameError('');
                     }}
                     className="btn-action-outline"
                     style={{ color: '#666', borderColor: '#ccc' }}
