@@ -179,6 +179,7 @@ export default function ProposalFormContent() {
   const colorPickerRef = useRef(null);
   const recipeFormRef = useRef(null);
   const recipesSectionRef = useRef(null);
+  const recipeNameInputRef = useRef(null);
 
   // Preset color swatches for quick selection
   const presetColors = [
@@ -404,6 +405,11 @@ export default function ProposalFormContent() {
 
     if (isDuplicate) {
       setRecipeNameError('A recipe with this name already exists in this proposal. Please use a unique name.');
+      // Scroll to the recipe name input
+      setTimeout(() => {
+        recipeNameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        recipeNameInputRef.current?.focus();
+      }, 100);
       return;
     }
 
@@ -1551,6 +1557,7 @@ export default function ProposalFormContent() {
                       Recipe Name:
                     </p>
                     <input
+                      ref={recipeNameInputRef}
                       type="text"
                       value={newRecipe.name}
                       onChange={(e) => {
