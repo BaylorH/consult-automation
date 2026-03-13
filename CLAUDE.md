@@ -229,37 +229,89 @@ proposals/{id}
 
 ## Deployment
 
-### Frontend (Firebase)
+### Frontend (Firebase) - consult-automation repo
+
+**From the consult-automation repo root:**
 ```bash
+# Build and deploy in one go
+cd frontend && npm run build && cd .. && firebase deploy --only hosting
+
+# Or step by step:
 cd frontend
 npm run build
+cd ..
 firebase deploy --only hosting
 ```
 
-### Backend (Lambda - BB Dev)
+**Live URL**: https://consult-automation.web.app
 
-**IMPORTANT**: Always specify the template file when building for bb-dev. The default `sam build` uses `template.yml` (production), not `template-bb-dev.yml`.
+### Backend (Lambda) - f50-aws-lambda repo
+
+The SearchProducts Lambda function lives in the `f50-aws-lambda` repo. There are two branches:
+
+| Branch | Purpose |
+|--------|---------|
+| `baylor/consult-automation` | PR branch for code review (SearchProducts changes only) |
+| `baylor/bb-dev-combined` | **Deployment branch** - includes SearchProducts + other features |
+
+#### Quick Deploy (Recommended)
+
+**From the f50-aws-lambda repo:**
+```bash
+cd /Users/baylorharrison/Documents/GitHub/f50-aws-lambda
+
+# Make sure you're on the deployment branch
+git checkout baylor/bb-dev-combined
+
+# Deploy using npm script (handles build + deploy)
+echo "y" | npm run deploy:bb-dev
+```
+
+The `deploy:bb-dev` script automatically:
+1. Builds with `template-bb-dev.yml` (correct template)
+2. Deploys using `samconfig.toml` bb-dev config
+3. The `echo "y"` auto-confirms the changeset
+
+#### Full Workflow (When Making Changes)
 
 ```bash
 cd /Users/baylorharrison/Documents/GitHub/f50-aws-lambda
 
-# 1. Make changes on the feature branch (e.g., baylor/consult-automation)
+# 1. Make changes on the PR branch
 git checkout baylor/consult-automation
-# ... make changes ...
-git add . && git commit -m "Your changes"
+# ... edit files ...
+git add <files> && git commit -m "Description of changes"
+git push origin baylor/consult-automation
 
-# 2. Merge into bb-dev-combined (the deployment branch)
+# 2. Merge into deployment branch
 git checkout baylor/bb-dev-combined
 git merge baylor/consult-automation -m "Merge consult-automation: description"
+git push origin baylor/bb-dev-combined
 
-# 3. Build with the CORRECT template (critical!)
-sam build --template template-bb-dev.yml
-
-# 4. Deploy
-sam deploy --config-env bb-dev --no-confirm-changeset
+# 3. Deploy
+echo "y" | npm run deploy:bb-dev
 ```
 
-**Common Pitfall**: If you run `sam build` without `--template template-bb-dev.yml`, it builds from `template.yml` (production) which has different table names, env vars, etc. This causes deployment failures like "resource already exists in another stack".
+#### Manual Build + Deploy (Alternative)
+
+```bash
+# Build with the CORRECT template (critical!)
+sam build --template template-bb-dev.yml
+
+# Deploy with config
+sam deploy --config-file samconfig.toml --config-env bb-dev
+```
+
+**⚠️ Common Pitfall**: Running `sam build` without `--template template-bb-dev.yml` uses `template.yml` (production) which has different env vars, table names, etc.
+
+#### Available npm Deploy Scripts
+
+| Script | Template | Stack |
+|--------|----------|-------|
+| `npm run deploy:bb-dev` | `template-bb-dev.yml` | `fiftyflowers-dev-bb` |
+| `npm run deploy:dev` | `template-dev.yml` | Dev environment |
+| `npm run deploy:stage` | `template-staging.yml` | Staging |
+| `npm run deploy:prod` | `template.yml` | **Production** (be careful!) |
 
 ---
 
