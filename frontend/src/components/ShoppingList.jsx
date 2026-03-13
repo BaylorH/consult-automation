@@ -230,24 +230,26 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                 return (
                 <div
                   key={idx}
-                  className="bg-white border border-[#ccc] border-solid flex items-start gap-[20px] p-[15px] rounded-[5px] w-full mb-[10px]"
+                  className="bg-white border border-[#ccc] border-solid flex flex-col rounded-[5px] w-full mb-[15px] overflow-hidden"
                 >
-                  {/* Product Image - larger */}
-                  {item.image && (
-                    <div className="border border-[#999] border-solid w-[120px] h-[120px] shrink-0 overflow-hidden rounded-[4px]">
-                      <img
-                        alt={item.name}
-                        className="object-cover size-full"
-                        src={item.image}
-                      />
-                    </div>
-                  )}
-
-                  {/* Product Details */}
-                  <div className="flex flex-col gap-[4px] flex-1 min-w-0">
-                    <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[16px] uppercase">
+                  {/* Header with image and product name */}
+                  <div className="flex items-center gap-[15px] p-[15px] bg-[#f9f9f9] border-b border-[#eee]">
+                    {item.image && (
+                      <div className="border border-[#ccc] border-solid w-[80px] h-[80px] shrink-0 overflow-hidden rounded-[4px]">
+                        <img
+                          alt={item.name}
+                          className="object-cover size-full"
+                          src={item.image}
+                        />
+                      </div>
+                    )}
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[18px] uppercase flex-1">
                       {item.name}
                     </p>
+                  </div>
+
+                  {/* Product Details */}
+                  <div className="flex flex-col gap-[4px] p-[20px]">
                     <div className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
                       {isBasicConsultation ? (
                         // Basic: Show all variant options
@@ -277,9 +279,6 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                               ))}
                             </div>
                           )}
-                          <p className="mt-4 font-['Avenir:Heavy',sans-serif] text-[18px]">
-                            {formatPrice(itemPrice)}
-                          </p>
                         </>
                       ) : (
                         // Professional: Show breakdown, needed total, variant options, price
@@ -349,23 +348,25 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                               })}
                             </div>
                           )}
-                          <p className="mt-4 font-['Avenir:Heavy',sans-serif] text-[18px]">
-                            {formatPrice(itemPrice)}
-                          </p>
                         </>
                       )}
                     </div>
                   </div>
 
-                  {/* View Product Button */}
-                  <a
-                    href={`https://www.fiftyflowers.com/products/${item.productHandle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-action-outline shrink-0 self-start mt-[40px]"
-                  >
-                    View Product
-                  </a>
+                  {/* Footer with Price and View Product Button */}
+                  <div className="flex items-center justify-between p-[15px] bg-[#f9f9f9] border-t border-[#eee]">
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[20px] text-[#333]">
+                      {formatPrice(itemPrice)}
+                    </p>
+                    <a
+                      href={`https://www.fiftyflowers.com/products/${item.productHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-action"
+                    >
+                      View Product
+                    </a>
+                  </div>
                 </div>
               );
               })}
