@@ -1789,6 +1789,7 @@ export default function ProposalFormContent() {
                 recipes={recipes}
                 featuredBlooms={featuredBlooms}
                 isBasicConsultation={isBasic}
+                deliveryDate={formData.deliveryDate}
               />
             );
           }

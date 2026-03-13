@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasicConsultation = false }) {
+export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasicConsultation = false, deliveryDate = '' }) {
   // Helper to extract stem count from variant label
   const parseStemCount = (label) => {
     if (!label) return 0;
@@ -162,6 +162,23 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
 
   const formatPrice = (price) => `$${price.toFixed(2)}`;
 
+  // Format delivery date for display
+  const formatDeliveryDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return '';
+    }
+  };
+
   // Format "used in" description
   const formatUsedIn = (usedIn) => {
     return usedIn
@@ -286,11 +303,17 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                 <p className="mb-1">Subtotal:</p>
                 <p className="mb-1">Consultation Discount ({discountPercent}%):</p>
                 <p className="mb-0 mt-3 text-[16px]">Total:</p>
+                {deliveryDate && (
+                  <p className="mb-0 mt-4 text-[14px]">Delivery Date:</p>
+                )}
               </div>
               <div className="font-['Avenir:Roman',sans-serif] text-[14px] text-black text-right">
                 <p className="mb-1">{formatPrice(subtotal)}</p>
                 <p className="mb-1">-{formatPrice(discount)}</p>
                 <p className="mb-0 mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">{formatPrice(total)}</p>
+                {deliveryDate && (
+                  <p className="mb-0 mt-4 text-[14px]">{formatDeliveryDate(deliveryDate)}</p>
+                )}
               </div>
             </div>
             <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] mt-4">
