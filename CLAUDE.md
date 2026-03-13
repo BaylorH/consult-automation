@@ -47,8 +47,14 @@ A **Proposal Manager** web app for FiftyFlowers (floral consultation business). 
 - **Lambda**: `SearchProducts` function in `functions/search-products/`
 - **Hook**: `useProductSearch` in `frontend/src/hooks/useProductSearch.jsx`
 - **API Endpoints**:
-  - `GET /search-products?q=query` - Search products by name
+  - `GET /search-products?q=query` - Search products by name (Shopify Predictive Search)
   - `GET /search-products/{handle}` - Get full product details with variants
+  - `POST /search-products/filter` - Filter by color/category/type (flowers_view DB)
+
+**Dual Search Approach** (Featured Blooms):
+- **Text-only search**: Uses `searchProducts()` → Shopify Predictive Search
+- **Filter search**: Uses `browseProducts()` → flowers_view database (PlanetScale)
+- Filters: colors (15 → 8 DB columns), category (Focal/Filler/Line/Greenery), flower type
 
 ### In Progress: Presentation Generation
 - **Figma design pulled** - MCP call made for "MacBook Air - 1" frame (node 196:11)
@@ -102,7 +108,7 @@ frontend/
 │   ├── hooks/
 │   │   ├── useAuth.jsx             # Auth context + flower celebration
 │   │   ├── useProposals.jsx        # Firestore CRUD + session caching
-│   │   └── useProductSearch.jsx    # Shopify product search
+│   │   └── useProductSearch.jsx    # Dual search: Shopify + flowers_view DB
 │   ├── utils/
 │   │   └── celebrate.js            # Flower celebration animation
 │   ├── lib/
@@ -231,11 +237,29 @@ firebase deploy --only hosting
 ```
 
 ### Backend (Lambda - BB Dev)
+
+**IMPORTANT**: Always specify the template file when building for bb-dev. The default `sam build` uses `template.yml` (production), not `template-bb-dev.yml`.
+
 ```bash
-cd /path/to/f50-aws-lambda
-sam build
-sam deploy --config-env bb-dev
+cd /Users/baylorharrison/Documents/GitHub/f50-aws-lambda
+
+# 1. Make changes on the feature branch (e.g., baylor/consult-automation)
+git checkout baylor/consult-automation
+# ... make changes ...
+git add . && git commit -m "Your changes"
+
+# 2. Merge into bb-dev-combined (the deployment branch)
+git checkout baylor/bb-dev-combined
+git merge baylor/consult-automation -m "Merge consult-automation: description"
+
+# 3. Build with the CORRECT template (critical!)
+sam build --template template-bb-dev.yml
+
+# 4. Deploy
+sam deploy --config-env bb-dev --no-confirm-changeset
 ```
+
+**Common Pitfall**: If you run `sam build` without `--template template-bb-dev.yml`, it builds from `template.yml` (production) which has different table names, env vars, etc. This causes deployment failures like "resource already exists in another stack".
 
 ---
 
@@ -351,10 +375,10 @@ The f50-aws-lambda backend has existing Shopify integrations that can be leverag
 
 ### 1. Search Products Lambda ✅ (Already Using)
 **Endpoint**: `/search-products`
-**API**: Shopify Storefront API (public, no auth required)
+**APIs**: Shopify Storefront API + PlanetScale flowers_view DB
 
 ```javascript
-// Search products by name
+// Search products by name (Shopify Predictive Search)
 GET /search-products?q=roses&limit=8
 // Response: { products: [{ handle, title, url, image, price, priceMin, priceMax }] }
 
@@ -364,7 +388,14 @@ GET /search-products/{handle}
 //             priceMin, priceMax, available, images[], featuredImage,
 //             variants: [{ id, title, price, available, sku, option1, option2, option3 }],
 //             options[] }
+
+// Filter products by color/category/type (flowers_view DB)
+POST /search-products/filter
+// Body: { colors: ["Red", "Pink"], category: "Focal Flowers", flowerType: "Roses Standard", limit: 12 }
+// Response: { filters, count, products: [{ handle, title, price, image, category, flowerType, colors }] }
 ```
+
+**Color mappings**: Red, Pink, Blush→Pink, White, Ivory→White, Yellow, Orange, Peach→Orange, Coral→Orange, Purple, Lavender→Purple, Blue, Green, Burgundy→Red, Mauve→Purple
 
 **Relevance**: Product search is complete. Variants include price, SKU, and availability - useful for shopping list.
 

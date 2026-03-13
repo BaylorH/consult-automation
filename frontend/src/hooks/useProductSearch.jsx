@@ -6,13 +6,20 @@ const DEBOUNCE_MS = 300;
 /**
  * Hook for searching Shopify products via Lambda API
  *
- * @returns {Object} - { searchProducts, getProduct, results, loading, error, clearResults }
+ * Provides two search modes:
+ * 1. searchProducts(query) - Text search using Shopify Predictive Search
+ * 2. browseProducts(filters) - Filter search using flowers_view database
+ *
+ * @returns {Object} - { searchProducts, browseProducts, getProduct, results, loading, error, clearResults }
  *
  * Usage:
- *   const { searchProducts, results, loading } = useProductSearch();
+ *   const { searchProducts, browseProducts, results, loading } = useProductSearch();
  *
- *   // Search for products (debounced)
+ *   // Text search (debounced)
  *   <input onChange={(e) => searchProducts(e.target.value)} />
+ *
+ *   // Filter search
+ *   browseProducts({ colors: ['Red', 'Pink'], category: 'Focal Flowers' });
  *
  *   // Display results
  *   {results.map(product => (
@@ -24,6 +31,7 @@ export function useProductSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const debounceTimer = useRef(null);
+  const browseAbortController = useRef(null);
 
   /**
    * Search products by query (debounced)
@@ -40,12 +48,15 @@ export function useProductSearch() {
     if (!query || query.trim().length < 2) {
       setResults([]);
       setError(null);
+      setLoading(false);
       return;
     }
 
+    // Set loading immediately so UI shows "Searching..." during debounce
+    setLoading(true);
+
     // Debounce the search
     debounceTimer.current = setTimeout(async () => {
-      setLoading(true);
       setError(null);
 
       try {
@@ -66,6 +77,60 @@ export function useProductSearch() {
         setLoading(false);
       }
     }, DEBOUNCE_MS);
+  }, []);
+
+  /**
+   * Browse products by filters using flowers_view database (not debounced)
+   * @param {Object} filters - Filter criteria
+   * @param {string[]} filters.colors - Array of color names (e.g., ["Red", "Pink"])
+   * @param {string} filters.category - Category name (e.g., "Focal Flowers")
+   * @param {string} filters.flowerType - Flower type (e.g., "Roses Standard")
+   * @param {number} limit - Max results (default 12)
+   */
+  const browseProducts = useCallback(async (filters, limit = 12) => {
+    // Cancel any pending browse request
+    if (browseAbortController.current) {
+      browseAbortController.current.abort();
+    }
+
+    // Validate we have at least one filter
+    const { colors = [], category, flowerType } = filters;
+    if (colors.length === 0 && !category && !flowerType) {
+      setResults([]);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    browseAbortController.current = new AbortController();
+
+    try {
+      const url = `${API_BASE_URL}${ENDPOINTS.SEARCH_PRODUCTS}/filter`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...filters, limit }),
+        signal: browseAbortController.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Filter search failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResults(data.products || []);
+    } catch (err) {
+      // Ignore abort errors
+      if (err.name === 'AbortError') return;
+
+      console.error('Browse products error:', err);
+      setError(err.message);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   /**
@@ -104,6 +169,7 @@ export function useProductSearch() {
 
   return {
     searchProducts,
+    browseProducts,
     getProduct,
     results,
     loading,

@@ -370,7 +370,8 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                           {item.usedIn && item.usedIn.length > 0 && (
                             <div className="mb-5">
                               <p className="font-['Avenir:Heavy',sans-serif] text-[14px] text-[#555] mb-3">Stem Calculation:</p>
-                              <div className="bg-[#e8f4f1] rounded-[12px] p-[16px] inline-block">
+                              <div className="flex justify-center">
+                                <div className="bg-[#e8f4f1] rounded-[12px] p-[16px]">
                                 <table className="border-collapse text-[14px]">
                                   <tbody>
                                     {item.usedIn.map((u, uIdx) => {
@@ -394,63 +395,71 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                                     )}
                                   </tbody>
                                 </table>
+                                </div>
                               </div>
                             </div>
                           )}
                           {/* Simple needed display if only one recipe or no breakdown */}
                           {(!item.usedIn || item.usedIn.length <= 1) && (
-                            <div className="mb-5 bg-[#e8f4f1] rounded-[12px] p-[16px] inline-block">
-                              <p className="text-[15px] text-[#333]">
-                                <span className="font-['Avenir:Heavy',sans-serif]">Stems Needed:</span>
-                                <span className="ml-2 font-['Avenir:Heavy',sans-serif] text-[16px] text-[#4a9380]">{item.stemsNeeded}</span>
-                              </p>
+                            <div className="mb-5 flex justify-center">
+                              <div className="bg-[#e8f4f1] rounded-[12px] p-[16px]">
+                                <p className="text-[15px] text-[#333]">
+                                  <span className="font-['Avenir:Heavy',sans-serif]">Stems Needed:</span>
+                                  <span className="ml-2 font-['Avenir:Heavy',sans-serif] text-[16px] text-[#4a9380]">{item.stemsNeeded}</span>
+                                </p>
+                              </div>
                             </div>
                           )}
                           {/* All variant options */}
                           {item.allVariants && item.allVariants.length > 0 && (
                             <div className="mt-4">
                               <p className="font-['Avenir:Heavy',sans-serif] text-[14px] text-[#555] mb-3">Select Package:</p>
-                              <div className="flex flex-col gap-[10px]">
-                                {item.allVariants.map((variant, optIdx) => {
-                                  const extraStems = variant.totalStems > item.stemsNeeded
-                                    ? variant.totalStems - item.stemsNeeded
-                                    : 0;
-                                  const isShort = variant.totalStems < item.stemsNeeded;
-                                  return (
-                                    <label
-                                      key={optIdx}
-                                      onClick={() => handleVariantSelect(item.productHandle, optIdx)}
-                                      className={`flex items-center gap-[12px] cursor-pointer p-[14px] rounded-[8px] border-2 transition-all ${
-                                        selectedIdx === optIdx
-                                          ? 'border-[#4a9380] bg-[#f0f7f5]'
-                                          : 'border-[#e0e0e0] bg-white hover:border-[#4a9380]'
-                                      }`}
-                                    >
-                                      <div
-                                        className={`border-2 size-[18px] rounded-full shrink-0 ${
-                                          selectedIdx === optIdx ? 'bg-[#4a9380] border-[#4a9380]' : 'bg-white border-[#999]'
-                                        }`}
-                                      />
-                                      <span className="font-['Avenir:Roman',sans-serif] text-[#333] text-[15px] flex-1">
-                                        {variant.label}
-                                        {extraStems > 0 && (
-                                          <span className="text-[#4a9380] text-[13px] ml-2">(+{extraStems} extra stems)</span>
-                                        )}
-                                        {isShort && (
-                                          <span className="text-[#e57373] text-[13px] ml-2">(short by {Math.ceil(item.stemsNeeded - variant.totalStems)} stems)</span>
-                                        )}
-                                      </span>
-                                      <span className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[16px]">
-                                        {formatPrice(variant.price)}
-                                      </span>
-                                      {optIdx === item.suggestedVariantIndex && (
-                                        <span className="text-[11px] text-white bg-[#4a9380] px-[8px] py-[3px] rounded-[4px] uppercase font-['Avenir:Heavy',sans-serif]">
+                              <div className="flex justify-center">
+                                <div className="flex flex-col gap-[10px]">
+                                  {item.allVariants.map((variant, optIdx) => {
+                                    const extraStems = variant.totalStems > item.stemsNeeded
+                                      ? variant.totalStems - item.stemsNeeded
+                                      : 0;
+                                    const isShort = variant.totalStems < item.stemsNeeded;
+                                    return (
+                                      <div key={optIdx} className="flex items-center gap-[10px]">
+                                        {/* Left spacer to balance the Suggested tag on the right */}
+                                        <span className="text-[11px] px-[8px] py-[3px] invisible">
                                           Suggested
                                         </span>
-                                      )}
-                                    </label>
-                                  );
-                                })}
+                                        <label
+                                          onClick={() => handleVariantSelect(item.productHandle, optIdx)}
+                                          className={`flex items-center gap-[12px] cursor-pointer p-[14px] rounded-[8px] border-2 transition-all flex-1 ${
+                                            selectedIdx === optIdx
+                                              ? 'border-[#4a9380] bg-[#f0f7f5]'
+                                              : 'border-[#e0e0e0] bg-white hover:border-[#4a9380]'
+                                          }`}
+                                        >
+                                          <div
+                                            className={`border-2 size-[18px] rounded-full shrink-0 ${
+                                              selectedIdx === optIdx ? 'bg-[#4a9380] border-[#4a9380]' : 'bg-white border-[#999]'
+                                            }`}
+                                          />
+                                          <span className="font-['Avenir:Roman',sans-serif] text-[#333] text-[15px]">
+                                            {variant.label}
+                                            {extraStems > 0 && (
+                                              <span className="text-[#4a9380] text-[13px] ml-2">(+{extraStems} extra stems)</span>
+                                            )}
+                                            {isShort && (
+                                              <span className="text-[#e57373] text-[13px] ml-2">(short by {Math.ceil(item.stemsNeeded - variant.totalStems)} stems)</span>
+                                            )}
+                                          </span>
+                                          <span className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[16px] ml-3">
+                                            {formatPrice(variant.price)}
+                                          </span>
+                                        </label>
+                                        <span className={`text-[11px] text-white bg-[#4a9380] px-[8px] py-[3px] rounded-[4px] uppercase font-['Avenir:Heavy',sans-serif] ${optIdx === item.suggestedVariantIndex ? 'visible' : 'invisible'}`}>
+                                          Suggested
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
                           )}
