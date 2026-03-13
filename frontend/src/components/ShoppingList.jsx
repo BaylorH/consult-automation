@@ -2,9 +2,11 @@
 // For Professional: calculates stems from recipes
 // For Basic: uses featured blooms directly with their selected variant
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasicConsultation = false, deliveryDate = '' }) {
+  // Track selected variant for each item (by product handle)
+  const [selections, setSelections] = useState({});
   // Helper to extract stem count from variant label
   const parseStemCount = (label) => {
     if (!label) return 0;
@@ -76,55 +78,41 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
           ...item,
           category: 'Unknown',
           image: null,
-          suggestedVariant: null,
+          allVariants: [],
+          suggestedVariantIndex: 0,
+          selectedVariantIndex: 0,
           price: 0,
         };
       }
 
-      // Find the smallest variant that covers the needed stems
-      let suggestedVariant = null;
-      let suggestedPrice = 0;
-      let quantityNeeded = 1;
+      // Parse all variants with stem counts
+      const allVariants = (bloom.options || []).map((opt) => ({
+        ...opt,
+        stemCount: parseStemCount(opt.label),
+      })).sort((a, b) => a.stemCount - b.stemCount);
 
-      if (bloom.options && bloom.options.length > 0) {
-        // Parse stem counts and sort by stems ascending
-        const variantsWithStems = bloom.options.map((opt) => ({
-          ...opt,
-          stemCount: parseStemCount(opt.label),
-        })).sort((a, b) => a.stemCount - b.stemCount);
+      // Find the suggested variant index (smallest that covers need)
+      let suggestedVariantIndex = 0;
 
-        // Find the smallest variant that covers the need with 1 unit
-        const coveringVariant = variantsWithStems.find(
+      if (allVariants.length > 0) {
+        const coveringIndex = allVariants.findIndex(
           (v) => v.stemCount >= item.stemsNeeded
         );
-
-        if (coveringVariant) {
-          // Single variant covers the need
-          suggestedVariant = coveringVariant;
-          suggestedPrice = coveringVariant.price;
-          quantityNeeded = 1;
-        } else {
-          // No single variant covers it - use the largest and calculate how many needed
-          const largest = variantsWithStems[variantsWithStems.length - 1];
-          if (largest && largest.stemCount > 0) {
-            quantityNeeded = Math.ceil(item.stemsNeeded / largest.stemCount);
-            suggestedVariant = {
-              ...largest,
-              label: `${largest.label} × ${quantityNeeded}`,
-            };
-            suggestedPrice = largest.price * quantityNeeded;
-          }
-        }
+        suggestedVariantIndex = coveringIndex >= 0 ? coveringIndex : allVariants.length - 1;
       }
+
+      const selectedVariant = allVariants[suggestedVariantIndex];
+      const price = selectedVariant?.price || 0;
 
       return {
         ...item,
         name: bloom.name || item.name,
         category: bloom.category || 'Uncategorized',
         image: bloom.image || null,
-        suggestedVariant,
-        quantityNeeded,
-        price: suggestedPrice,
+        allVariants,
+        suggestedVariantIndex,
+        selectedVariantIndex: suggestedVariantIndex,
+        price,
       };
     });
 
@@ -154,8 +142,28 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
     return groups;
   }, [shoppingItems]);
 
-  // Calculate totals
-  const subtotal = shoppingItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  // Get selected variant index for an item (defaults to suggested)
+  const getSelectedIndex = (item) => {
+    if (selections[item.productHandle] !== undefined) {
+      return selections[item.productHandle];
+    }
+    return item.suggestedVariantIndex || 0;
+  };
+
+  // Handle variant selection
+  const handleVariantSelect = (productHandle, variantIndex) => {
+    setSelections(prev => ({
+      ...prev,
+      [productHandle]: variantIndex
+    }));
+  };
+
+  // Calculate totals using selected variants
+  const subtotal = shoppingItems.reduce((sum, item) => {
+    const selectedIdx = getSelectedIndex(item);
+    const selectedVariant = item.allVariants?.[selectedIdx];
+    return sum + (selectedVariant?.price || item.price || 0);
+  }, 0);
   const discountPercent = 15; // Consultation discount
   const discount = subtotal * (discountPercent / 100);
   const total = subtotal - discount;
@@ -214,14 +222,19 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                 {category}
               </p>
 
-              {items.map((item, idx) => (
+              {items.map((item, idx) => {
+                const selectedIdx = getSelectedIndex(item);
+                const selectedVariant = item.allVariants?.[selectedIdx];
+                const itemPrice = selectedVariant?.price || item.price || 0;
+
+                return (
                 <div
                   key={idx}
-                  className="bg-white border border-[#ccc] border-solid flex items-center gap-[20px] p-[15px] rounded-[5px] w-full mb-[10px]"
+                  className="bg-white border border-[#ccc] border-solid flex items-start gap-[20px] p-[15px] rounded-[5px] w-full mb-[10px]"
                 >
-                  {/* Product Image */}
+                  {/* Product Image - larger */}
                   {item.image && (
-                    <div className="border border-[#999] border-solid size-[60px] shrink-0 overflow-hidden">
+                    <div className="border border-[#999] border-solid w-[120px] h-[120px] shrink-0 overflow-hidden rounded-[4px]">
                       <img
                         alt={item.name}
                         className="object-cover size-full"
@@ -237,28 +250,47 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                     </p>
                     <div className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
                       {isBasicConsultation ? (
-                        // Basic: Just show selected quantity and price
+                        // Basic: Show all variant options
                         <>
-                          {item.suggestedVariant && (
-                            <p className="mb-1">
-                              <span className="font-['Avenir:Heavy',sans-serif]">Quantity</span>
-                              <span>: {item.suggestedVariant.label}</span>
-                            </p>
+                          {item.allVariants && item.allVariants.length > 0 && (
+                            <div className="flex flex-col gap-[6px] mt-2">
+                              {item.allVariants.map((variant, optIdx) => (
+                                <div
+                                  key={optIdx}
+                                  onClick={() => handleVariantSelect(item.productHandle, optIdx)}
+                                  className="flex items-center gap-[8px] cursor-pointer"
+                                >
+                                  <div
+                                    className={`border border-[#999] border-solid size-[15px] rounded-full ${
+                                      selectedIdx === optIdx ? 'bg-[#4a9380] border-[#4a9380]' : 'bg-white'
+                                    }`}
+                                  />
+                                  <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
+                                    {variant.label} - {formatPrice(variant.price)}
+                                  </p>
+                                  {optIdx === item.suggestedVariantIndex && (
+                                    <span className="text-[10px] text-white bg-[#4a9380] px-[6px] py-[1px] rounded-[3px] uppercase">
+                                      Suggested
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           )}
-                          <p className="mt-2 font-['Avenir:Heavy',sans-serif]">
-                            {formatPrice(item.price)}
+                          <p className="mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">
+                            {formatPrice(itemPrice)}
                           </p>
                         </>
                       ) : (
-                        // Professional: Show breakdown, needed total, suggested, price
+                        // Professional: Show breakdown, needed total, variant options, price
                         <>
                           {/* Breakdown showing how stems add up */}
                           {item.usedIn && item.usedIn.length > 0 && (
                             <div className="mb-2 text-[13px] text-[#555]">
-                              {item.usedIn.map((u, idx) => {
+                              {item.usedIn.map((u, uIdx) => {
                                 const lineTotal = u.stemsPerRecipe * u.recipeQty;
                                 return (
-                                  <div key={idx} className="flex gap-[8px]">
+                                  <div key={uIdx} className="flex gap-[8px]">
                                     <span className="w-[180px]">
                                       {u.stemsPerRecipe} × {u.recipeName}{u.recipeQty > 1 ? ` (×${u.recipeQty})` : ''}
                                     </span>
@@ -278,24 +310,47 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                           )}
                           {/* Simple needed display if only one recipe or no breakdown */}
                           {(!item.usedIn || item.usedIn.length <= 1) && (
-                            <p className="mb-1">
+                            <p className="mb-2">
                               <span className="font-['Avenir:Heavy',sans-serif]">Needed</span>
                               <span>: {item.stemsNeeded} Stems</span>
                             </p>
                           )}
-                          {item.suggestedVariant && (
-                            <p className="mb-1">
-                              <span className="font-['Avenir:Heavy',sans-serif]">Suggested</span>
-                              <span>: {item.suggestedVariant.label}</span>
-                              {item.suggestedVariant.stemCount && item.suggestedVariant.stemCount > item.stemsNeeded && (
-                                <span className="text-[#666] text-[12px] ml-1">
-                                  (+{item.suggestedVariant.stemCount - item.stemsNeeded} extra)
-                                </span>
-                              )}
-                            </p>
+                          {/* All variant options */}
+                          {item.allVariants && item.allVariants.length > 0 && (
+                            <div className="flex flex-col gap-[6px] mt-2">
+                              {item.allVariants.map((variant, optIdx) => {
+                                const extraStems = variant.stemCount > item.stemsNeeded
+                                  ? variant.stemCount - item.stemsNeeded
+                                  : 0;
+                                return (
+                                  <div
+                                    key={optIdx}
+                                    onClick={() => handleVariantSelect(item.productHandle, optIdx)}
+                                    className="flex items-center gap-[8px] cursor-pointer"
+                                  >
+                                    <div
+                                      className={`border border-[#999] border-solid size-[15px] rounded-full ${
+                                        selectedIdx === optIdx ? 'bg-[#4a9380] border-[#4a9380]' : 'bg-white'
+                                      }`}
+                                    />
+                                    <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
+                                      {variant.label} - {formatPrice(variant.price)}
+                                      {extraStems > 0 && (
+                                        <span className="text-[#666] text-[12px] ml-1">(+{extraStems} extra)</span>
+                                      )}
+                                    </p>
+                                    {optIdx === item.suggestedVariantIndex && (
+                                      <span className="text-[10px] text-white bg-[#4a9380] px-[6px] py-[1px] rounded-[3px] uppercase">
+                                        Suggested
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
-                          <p className="mt-2 font-['Avenir:Heavy',sans-serif]">
-                            {formatPrice(item.price)}
+                          <p className="mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">
+                            {formatPrice(itemPrice)}
                           </p>
                         </>
                       )}
@@ -307,12 +362,13 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                     href={`https://www.fiftyflowers.com/products/${item.productHandle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-action-outline shrink-0"
+                    className="btn-action-outline shrink-0 self-start mt-[40px]"
                   >
                     View Product
                   </a>
                 </div>
-              ))}
+              );
+              })}
             </div>
           );
         })}
