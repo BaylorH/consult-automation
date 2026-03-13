@@ -250,12 +250,39 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                           </p>
                         </>
                       ) : (
-                        // Professional: Show needed, suggested, used in, price
+                        // Professional: Show breakdown, needed total, suggested, price
                         <>
-                          <p className="mb-1">
-                            <span className="font-['Avenir:Heavy',sans-serif]">Needed</span>
-                            <span>: {item.stemsNeeded} Stems</span>
-                          </p>
+                          {/* Breakdown showing how stems add up */}
+                          {item.usedIn && item.usedIn.length > 0 && (
+                            <div className="mb-2 text-[13px] text-[#555]">
+                              {item.usedIn.map((u, idx) => {
+                                const lineTotal = u.stemsPerRecipe * u.recipeQty;
+                                return (
+                                  <div key={idx} className="flex gap-[8px]">
+                                    <span className="w-[180px]">
+                                      {u.stemsPerRecipe} × {u.recipeName}{u.recipeQty > 1 ? ` (×${u.recipeQty})` : ''}
+                                    </span>
+                                    <span>=</span>
+                                    <span className="w-[50px] text-right">{lineTotal}</span>
+                                  </div>
+                                );
+                              })}
+                              {item.usedIn.length > 1 && (
+                                <div className="flex gap-[8px] border-t border-[#ccc] mt-1 pt-1">
+                                  <span className="w-[180px] font-['Avenir:Heavy',sans-serif]">Total Needed</span>
+                                  <span>=</span>
+                                  <span className="w-[50px] text-right font-['Avenir:Heavy',sans-serif]">{item.stemsNeeded}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* Simple needed display if only one recipe or no breakdown */}
+                          {(!item.usedIn || item.usedIn.length <= 1) && (
+                            <p className="mb-1">
+                              <span className="font-['Avenir:Heavy',sans-serif]">Needed</span>
+                              <span>: {item.stemsNeeded} Stems</span>
+                            </p>
+                          )}
                           {item.suggestedVariant && (
                             <p className="mb-1">
                               <span className="font-['Avenir:Heavy',sans-serif]">Suggested</span>
@@ -265,11 +292,6 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                                   (+{item.suggestedVariant.stemCount - item.stemsNeeded} extra)
                                 </span>
                               )}
-                            </p>
-                          )}
-                          {item.usedIn && item.usedIn.length > 0 && (
-                            <p className="mb-1 text-[#666] text-[12px]">
-                              Used in: {formatUsedIn(item.usedIn)}
                             </p>
                           )}
                           <p className="mt-2 font-['Avenir:Heavy',sans-serif]">
