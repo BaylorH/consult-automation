@@ -232,7 +232,7 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                   key={idx}
                   className="bg-white border border-[#ccc] border-solid flex flex-col rounded-[5px] w-full mb-[15px] overflow-hidden"
                 >
-                  {/* Header with image and product name */}
+                  {/* Header with image, product name, and View Product button */}
                   <div className="flex items-center gap-[15px] p-[15px] bg-[#f9f9f9] border-b border-[#eee]">
                     {item.image && (
                       <div className="border border-[#ccc] border-solid w-[80px] h-[80px] shrink-0 overflow-hidden rounded-[4px]">
@@ -246,6 +246,14 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                     <p className="font-['Avenir:Heavy',sans-serif] text-[#333] text-[18px] uppercase flex-1">
                       {item.name}
                     </p>
+                    <a
+                      href={`https://www.fiftyflowers.com/products/${item.productHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-action-outline shrink-0"
+                    >
+                      View Product
+                    </a>
                   </div>
 
                   {/* Product Details */}
@@ -353,19 +361,11 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                     </div>
                   </div>
 
-                  {/* Footer with Price and View Product Button */}
-                  <div className="flex items-center justify-between p-[15px] bg-[#f9f9f9] border-t border-[#eee]">
+                  {/* Footer with Price */}
+                  <div className="flex items-center p-[15px] bg-[#f9f9f9] border-t border-[#eee]">
                     <p className="font-['Avenir:Heavy',sans-serif] text-[20px] text-[#333]">
                       {formatPrice(itemPrice)}
                     </p>
-                    <a
-                      href={`https://www.fiftyflowers.com/products/${item.productHandle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-action"
-                    >
-                      View Product
-                    </a>
                   </div>
                 </div>
               );
