@@ -165,6 +165,31 @@ export default function ProposalFormContent() {
   const bloomSearchRef = useRef(null);
   const { searchProducts, getProduct, results: searchResults, loading: searchLoading, clearResults } = useProductSearch();
 
+  // Search filter states
+  const [showColorFilter, setShowColorFilter] = useState(false);
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [showTypeFilter, setShowTypeFilter] = useState(false);
+  const [showCombinedFilter, setShowCombinedFilter] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const colorFilterRef = useRef(null);
+  const categoryFilterRef = useRef(null);
+  const typeFilterRef = useRef(null);
+  const combinedFilterRef = useRef(null);
+
+  // Available filter options
+  const PRESET_COLORS = [
+    'Red', 'Pink', 'Blush', 'White', 'Ivory', 'Peach', 'Coral', 'Orange',
+    'Yellow', 'Purple', 'Lavender', 'Blue', 'Green', 'Burgundy', 'Mauve'
+  ];
+  const CATEGORIES = ['Focal Flowers', 'Filler Flowers', 'Line Flowers', 'Greenery'];
+  const FLOWER_TYPES = [
+    'Roses Standard', 'Roses Garden', 'Roses Spray', 'Ranunculus', 'Anemone',
+    'Dahlia', 'Peony', 'Hydrangea', 'Lisianthus', 'Carnations', 'Tulips',
+    'Delphinium', 'Stock', 'Eucalyptus', 'Greens', 'Ferns'
+  ];
+
   // Inspiration & Style state
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
@@ -515,11 +540,70 @@ export default function ProposalFormContent() {
   };
 
   // Product search handlers (Featured Blooms)
+  // Build combined search query from text + filters
+  const buildSearchQuery = (textQuery, color, category, type) => {
+    const parts = [];
+    if (textQuery.trim()) parts.push(textQuery.trim());
+    if (color) parts.push(color.toLowerCase());
+    if (category) {
+      // Convert category to search term (e.g., "Focal Flowers" -> "focal")
+      const categoryMap = {
+        'Focal Flowers': 'focal',
+        'Filler Flowers': 'filler',
+        'Line Flowers': 'line',
+        'Greenery': 'greenery'
+      };
+      parts.push(categoryMap[category] || category.toLowerCase());
+    }
+    if (type) parts.push(type.toLowerCase());
+    return parts.join(' ');
+  };
+
+  // Execute search with current filters
+  const executeFilteredSearch = (textQuery = bloomSearchQuery, color = selectedColor, category = selectedCategory, type = selectedType) => {
+    const combinedQuery = buildSearchQuery(textQuery, color, category, type);
+    if (combinedQuery.length >= 2) {
+      searchProducts(combinedQuery);
+      setShowBloomResults(true);
+    } else {
+      clearResults();
+      setShowBloomResults(false);
+    }
+  };
+
   const handleBloomSearch = (e) => {
     const query = e.target.value;
     setBloomSearchQuery(query);
-    searchProducts(query);
-    setShowBloomResults(query.length >= 2);
+    executeFilteredSearch(query, selectedColor, selectedCategory, selectedType);
+  };
+
+  // Filter selection handlers
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    setShowColorFilter(false);
+    executeFilteredSearch(bloomSearchQuery, color, selectedCategory, selectedType);
+  };
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setShowCategoryFilter(false);
+    executeFilteredSearch(bloomSearchQuery, selectedColor, category, selectedType);
+  };
+
+  const handleTypeSelect = (type) => {
+    setSelectedType(type);
+    setShowTypeFilter(false);
+    executeFilteredSearch(bloomSearchQuery, selectedColor, selectedCategory, type);
+  };
+
+  const clearAllFilters = () => {
+    setSelectedColor('');
+    setSelectedCategory('');
+    setSelectedType('');
+    setBloomSearchQuery('');
+    clearResults();
+    setShowBloomResults(false);
+    setShowCombinedFilter(false);
   };
 
   const handleSelectProduct = async (product) => {
@@ -532,14 +616,16 @@ export default function ProposalFormContent() {
         name: fullProduct.title,
         productHandle: fullProduct.handle, // Use productHandle for consistency with seed data
         handle: fullProduct.handle, // Keep handle as fallback
+        productType: fullProduct.type || null, // Product type (e.g., "Ranunculus", "Roses Garden")
         category: fullProduct.category || null,
         image: fullProduct.featuredImage || fullProduct.images?.[0] || '',
         selectedOption: 0,
+        stemsPerBunch: fullProduct.stemsPerBunch || null, // From product page scraping
         options: fullProduct.variants.map(variant => ({
           label: variant.title !== 'Default Title' ? variant.title : fullProduct.title,
           price: variant.price / 100, // Convert from cents
           variantId: variant.id,
-          available: variant.available,
+          available: variant.available ?? true, // Default to true if undefined
         })),
       };
 
@@ -741,6 +827,20 @@ export default function ProposalFormContent() {
           setNewColor('#ffffff');
           setShowColorPicker(false);
         }
+      }
+
+      // Close search filter dropdowns when clicking outside
+      if (colorFilterRef.current && !colorFilterRef.current.contains(e.target)) {
+        setShowColorFilter(false);
+      }
+      if (categoryFilterRef.current && !categoryFilterRef.current.contains(e.target)) {
+        setShowCategoryFilter(false);
+      }
+      if (typeFilterRef.current && !typeFilterRef.current.contains(e.target)) {
+        setShowTypeFilter(false);
+      }
+      if (combinedFilterRef.current && !combinedFilterRef.current.contains(e.target)) {
+        setShowCombinedFilter(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -1188,8 +1288,12 @@ export default function ProposalFormContent() {
                     type="text"
                     value={bloomSearchQuery}
                     onChange={handleBloomSearch}
-                    onFocus={() => bloomSearchQuery.length >= 2 && setShowBloomResults(true)}
-                    placeholder="Search flowers by name..."
+                    onFocus={() => (bloomSearchQuery.length >= 2 || selectedColor || selectedCategory || selectedType) && setShowBloomResults(true)}
+                    placeholder={
+                      (selectedColor || selectedCategory || selectedType)
+                        ? `Search within ${[selectedColor, selectedCategory, selectedType].filter(Boolean).join(' + ')}...`
+                        : "Search flowers by name, color, type..."
+                    }
                     className="flex-1 outline-none border-none font-['Avenir:Roman',sans-serif] text-[14px] text-[#333] placeholder:text-[#999]"
                   />
                   {searchLoading && (
@@ -1224,35 +1328,198 @@ export default function ProposalFormContent() {
                     ))}
                   </div>
                 )}
-                {showBloomResults && bloomSearchQuery.length >= 2 && searchResults.length === 0 && !searchLoading && (
+                {showBloomResults && (bloomSearchQuery.length >= 2 || selectedColor || selectedCategory || selectedType) && searchResults.length === 0 && !searchLoading && (
                   <div className="absolute top-full left-0 w-[520px] bg-white border border-[#ccc] border-t-0 rounded-b-[5px] p-[15px] z-50 shadow-lg">
                     <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px]">
-                      No products found
+                      No products found {(selectedColor || selectedCategory || selectedType) && 'with current filters'}
                     </p>
                   </div>
                 )}
               </div>
               {/* Search By Color dropdown */}
-              <div className="border border-[#ccc] border-solid flex gap-[60px] h-[48px] items-center p-[15px] rounded-[5px] cursor-pointer hover:bg-[#fafafa]">
-                <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px] w-[87px]">
-                  Search By Color
-                </p>
-                <div className="flex items-center justify-center">
-                  <div className="rotate-180 size-[10px]">
-                    <ChevronIcon />
+              <div className="relative" ref={colorFilterRef}>
+                <div
+                  onClick={() => setShowColorFilter(!showColorFilter)}
+                  className={`border border-solid flex gap-[10px] h-[48px] items-center px-[12px] rounded-[5px] cursor-pointer hover:bg-[#fafafa] ${selectedColor ? 'border-[#4a9380] bg-[#f0f9f7]' : 'border-[#ccc]'}`}
+                >
+                  <p className={`font-['Avenir:Roman',sans-serif] text-[12px] ${selectedColor ? 'text-[#333]' : 'text-[#999]'}`}>
+                    {selectedColor || 'Color'}
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <div className={`size-[10px] ${showColorFilter ? '' : 'rotate-180'}`}>
+                      <ChevronIcon />
+                    </div>
                   </div>
                 </div>
+                {showColorFilter && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-[#ccc] rounded-[5px] shadow-lg z-50 w-[200px] max-h-[300px] overflow-y-auto">
+                    {selectedColor && (
+                      <div
+                        onClick={() => handleColorSelect('')}
+                        className="p-[10px] cursor-pointer hover:bg-[#f5f5f5] border-b border-[#eee] text-[#999] text-[12px]"
+                      >
+                        Clear color filter
+                      </div>
+                    )}
+                    <p className="px-[10px] py-[6px] text-[10px] text-[#999] uppercase tracking-wide bg-[#f9f9f9]">From Palette</p>
+                    <div className="flex flex-wrap gap-[4px] p-[8px] border-b border-[#eee]">
+                      {colorPalette.map((color, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleColorSelect(color)}
+                          className="w-[24px] h-[24px] rounded-full cursor-pointer border border-[#ccc] hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                    <p className="px-[10px] py-[6px] text-[10px] text-[#999] uppercase tracking-wide bg-[#f9f9f9]">Preset Colors</p>
+                    {PRESET_COLORS.map((color) => (
+                      <div
+                        key={color}
+                        onClick={() => handleColorSelect(color)}
+                        className={`p-[10px] cursor-pointer hover:bg-[#f5f5f5] text-[13px] ${selectedColor === color ? 'bg-[#e8f5f2] text-[#4a9380]' : 'text-[#333]'}`}
+                      >
+                        {color}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {/* Search by All dropdown */}
-              <div className="border border-[#ccc] border-solid flex gap-[60px] h-[48px] items-center p-[15px] rounded-[5px] cursor-pointer hover:bg-[#fafafa]">
-                <p className="font-['Avenir:Roman',sans-serif] text-[#999] text-[12px] w-[87px]">
-                  Search by All
-                </p>
-                <div className="flex items-center justify-center">
-                  <div className="rotate-180 size-[10px]">
-                    <ChevronIcon />
+
+              {/* Search By Category dropdown */}
+              <div className="relative" ref={categoryFilterRef}>
+                <div
+                  onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                  className={`border border-solid flex gap-[10px] h-[48px] items-center px-[12px] rounded-[5px] cursor-pointer hover:bg-[#fafafa] ${selectedCategory ? 'border-[#4a9380] bg-[#f0f9f7]' : 'border-[#ccc]'}`}
+                >
+                  <p className={`font-['Avenir:Roman',sans-serif] text-[12px] ${selectedCategory ? 'text-[#333]' : 'text-[#999]'}`}>
+                    {selectedCategory || 'Category'}
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <div className={`size-[10px] ${showCategoryFilter ? '' : 'rotate-180'}`}>
+                      <ChevronIcon />
+                    </div>
                   </div>
                 </div>
+                {showCategoryFilter && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-[#ccc] rounded-[5px] shadow-lg z-50 w-[160px]">
+                    {selectedCategory && (
+                      <div
+                        onClick={() => handleCategorySelect('')}
+                        className="p-[10px] cursor-pointer hover:bg-[#f5f5f5] border-b border-[#eee] text-[#999] text-[12px]"
+                      >
+                        Clear
+                      </div>
+                    )}
+                    {CATEGORIES.map((cat) => (
+                      <div
+                        key={cat}
+                        onClick={() => handleCategorySelect(cat)}
+                        className={`p-[10px] cursor-pointer hover:bg-[#f5f5f5] text-[13px] ${selectedCategory === cat ? 'bg-[#e8f5f2] text-[#4a9380]' : 'text-[#333]'}`}
+                      >
+                        {cat}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Search By Type dropdown */}
+              <div className="relative" ref={typeFilterRef}>
+                <div
+                  onClick={() => setShowTypeFilter(!showTypeFilter)}
+                  className={`border border-solid flex gap-[10px] h-[48px] items-center px-[12px] rounded-[5px] cursor-pointer hover:bg-[#fafafa] ${selectedType ? 'border-[#4a9380] bg-[#f0f9f7]' : 'border-[#ccc]'}`}
+                >
+                  <p className={`font-['Avenir:Roman',sans-serif] text-[12px] ${selectedType ? 'text-[#333]' : 'text-[#999]'}`}>
+                    {selectedType || 'Flower Type'}
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <div className={`size-[10px] ${showTypeFilter ? '' : 'rotate-180'}`}>
+                      <ChevronIcon />
+                    </div>
+                  </div>
+                </div>
+                {showTypeFilter && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-[#ccc] rounded-[5px] shadow-lg z-50 w-[160px] max-h-[300px] overflow-y-auto">
+                    {selectedType && (
+                      <div
+                        onClick={() => handleTypeSelect('')}
+                        className="p-[10px] cursor-pointer hover:bg-[#f5f5f5] border-b border-[#eee] text-[#999] text-[12px]"
+                      >
+                        Clear
+                      </div>
+                    )}
+                    {FLOWER_TYPES.map((type) => (
+                      <div
+                        key={type}
+                        onClick={() => handleTypeSelect(type)}
+                        className={`p-[10px] cursor-pointer hover:bg-[#f5f5f5] text-[13px] ${selectedType === type ? 'bg-[#e8f5f2] text-[#4a9380]' : 'text-[#333]'}`}
+                      >
+                        {type}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Combined Filters / Clear All */}
+              <div className="relative" ref={combinedFilterRef}>
+                <div
+                  onClick={() => setShowCombinedFilter(!showCombinedFilter)}
+                  className={`border border-solid flex gap-[10px] h-[48px] items-center px-[12px] rounded-[5px] cursor-pointer hover:bg-[#fafafa] ${(selectedColor || selectedCategory || selectedType) ? 'border-[#4a9380] bg-[#f0f9f7]' : 'border-[#ccc]'}`}
+                >
+                  <p className={`font-['Avenir:Roman',sans-serif] text-[12px] ${(selectedColor || selectedCategory || selectedType) ? 'text-[#333]' : 'text-[#999]'}`}>
+                    All Filters {(selectedColor || selectedCategory || selectedType) && `(${[selectedColor, selectedCategory, selectedType].filter(Boolean).length})`}
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <div className={`size-[10px] ${showCombinedFilter ? '' : 'rotate-180'}`}>
+                      <ChevronIcon />
+                    </div>
+                  </div>
+                </div>
+                {showCombinedFilter && (
+                  <div className="absolute top-full right-0 mt-1 bg-white border border-[#ccc] rounded-[5px] shadow-lg z-50 w-[280px] p-[15px]">
+                    <p className="font-['Avenir:Heavy',sans-serif] text-[14px] text-[#333] mb-[10px]">Active Filters</p>
+                    {!selectedColor && !selectedCategory && !selectedType && !bloomSearchQuery && (
+                      <p className="text-[#999] text-[13px]">No filters active</p>
+                    )}
+                    <div className="flex flex-col gap-[8px]">
+                      {bloomSearchQuery && (
+                        <div className="flex items-center justify-between bg-[#f5f5f5] rounded-[4px] px-[10px] py-[6px]">
+                          <span className="text-[12px] text-[#333]">Text: "{bloomSearchQuery}"</span>
+                          <button onClick={() => { setBloomSearchQuery(''); executeFilteredSearch('', selectedColor, selectedCategory, selectedType); }} className="text-[#999] hover:text-[#333] text-[14px]">×</button>
+                        </div>
+                      )}
+                      {selectedColor && (
+                        <div className="flex items-center justify-between bg-[#f5f5f5] rounded-[4px] px-[10px] py-[6px]">
+                          <span className="text-[12px] text-[#333]">Color: {selectedColor}</span>
+                          <button onClick={() => handleColorSelect('')} className="text-[#999] hover:text-[#333] text-[14px]">×</button>
+                        </div>
+                      )}
+                      {selectedCategory && (
+                        <div className="flex items-center justify-between bg-[#f5f5f5] rounded-[4px] px-[10px] py-[6px]">
+                          <span className="text-[12px] text-[#333]">Category: {selectedCategory}</span>
+                          <button onClick={() => handleCategorySelect('')} className="text-[#999] hover:text-[#333] text-[14px]">×</button>
+                        </div>
+                      )}
+                      {selectedType && (
+                        <div className="flex items-center justify-between bg-[#f5f5f5] rounded-[4px] px-[10px] py-[6px]">
+                          <span className="text-[12px] text-[#333]">Type: {selectedType}</span>
+                          <button onClick={() => handleTypeSelect('')} className="text-[#999] hover:text-[#333] text-[14px]">×</button>
+                        </div>
+                      )}
+                    </div>
+                    {(selectedColor || selectedCategory || selectedType || bloomSearchQuery) && (
+                      <button
+                        onClick={clearAllFilters}
+                        className="mt-[12px] w-full py-[8px] bg-[#f0f0f0] hover:bg-[#e0e0e0] rounded-[4px] text-[12px] text-[#666]"
+                      >
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -59,6 +59,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Orange Ranunculus Fresh Cut Flower',
     productType: 'Ranunculus',
     category: 'Focal Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/orange-ranunculus-fresh-cut-flower-wholesale-flowers-close-up_4700c_c0jy0.webp?v=1771440708',
     selectedOption: 0,
     options: [
@@ -75,6 +76,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Light Pink Ranunculus Fresh Cut Flower',
     productType: 'Ranunculus',
     category: 'Focal Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/light-pink-ranunculus-fresh-cut-flowers-wholesale-flowers-close-up_4bec4_wxy51.webp?v=1771443971',
     selectedOption: 0,
     options: [
@@ -91,6 +93,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Peach Sherbet Garden Rose',
     productType: 'Roses Garden',
     category: 'Focal Flowers',
+    stemsPerBunch: 12,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/peach-sherbet-garden-roses-online_pri_1_5322_l_8avl5.webp?v=1771442531',
     selectedOption: 0,
     options: [
@@ -107,6 +110,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Paper White Garden Rose',
     productType: 'Roses Garden',
     category: 'Focal Flowers',
+    stemsPerBunch: 12,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/paper-white-garden-rose-wholesale-flowers-close-up_12796_iiw70.webp?v=1771442507',
     selectedOption: 0,
     options: [
@@ -123,6 +127,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Blush White Wholesale Anemone Flowers',
     productType: 'Anemone',
     category: 'Focal Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/blush-white-anemones-wholesale-flowers-wholesale-flowers-close-up_1d004_2ura1.webp?v=1771446136',
     selectedOption: 0,
     options: [
@@ -138,6 +143,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Red Fresh Cut Anemone Flower',
     productType: 'Anemone',
     category: 'Focal Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/red-fresh-cut-anemone-flower-wholesale-flowers-close-up_20114_whqf2.webp?v=1771440638',
     selectedOption: 0,
     options: [
@@ -153,6 +159,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Quicksand Cream Roses',
     productType: 'Roses Standard',
     category: 'Focal Flowers',
+    stemsPerBunch: 25,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/quicksand-cream-roses-vase-close-up_9eca.webp?v=1771442373',
     selectedOption: 0,
     options: [
@@ -168,6 +175,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Champagne Lisianthus Wholesale Flowers',
     productType: 'Lisianthus',
     category: 'Filler Flowers',
+    stemsPerBunch: 5,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/arena-gold-yellow-lisianthus-flowers-online_pri_18_6670_l_75wi5.webp?v=1771444023',
     selectedOption: 0,
     options: [
@@ -181,6 +189,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Yellow Button Pom Flower',
     productType: 'PomPom',
     category: 'Filler Flowers',
+    stemsPerBunch: 5,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/yellow-button-pom-flower-wholesale-flowers_e01db_u9g90.webp?v=1771439745',
     selectedOption: 0,
     options: [
@@ -195,6 +204,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Purple Aster Flowers',
     productType: 'Asters',
     category: 'Filler Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/purple-aster-flowers-online_pri_92_5192_l_jl955.webp?v=1771442755',
     selectedOption: 0,
     options: [
@@ -208,6 +218,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Amethyst Hues Allium Flowers',
     productType: 'Allium',
     category: 'Filler Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/allium-summer-drummer-bloom_3a4be_9rjz1.webp?v=1771443852',
     selectedOption: 0,
     options: [
@@ -219,6 +230,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Feverfew Daisy Wholesale Cut Flower',
     productType: 'Feverfew',
     category: 'Filler Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/feverfew-daisy-wholesale-cut-flower-wholesale-flowers_66702_r3w41.webp?v=1771442684',
     selectedOption: 0,
     options: [
@@ -233,6 +245,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Light Pink Bulk Spray Roses',
     productType: 'Roses Spray',
     category: 'Filler Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/light-pink-spray-roses-flowers-online_pri_86_840_l_ypto4.webp?v=1771440591',
     selectedOption: 0,
     options: [
@@ -247,6 +260,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Creamy White Bulk Spray Roses',
     productType: 'Roses Spray',
     category: 'Filler Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/creamy-white-bulk-spray-roses-close-up.jpg_8af1.webp?v=1773180980',
     selectedOption: 0,
     options: [
@@ -263,6 +277,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'White Delphinium Flowers',
     productType: 'Delphinium',
     category: 'Line Flowers',
+    stemsPerBunch: 5,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/white-delphinium-flower-wholesale-flowers-close-up_8f314_lexv3.webp?v=1771440162',
     selectedOption: 0,
     options: [
@@ -276,6 +291,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Lavender Purple Stock Flower',
     productType: 'Stock',
     category: 'Line Flowers',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/lavender-purple-stock-flowers-online_pri_31_518_l_mz630.webp?v=1771440243',
     selectedOption: 0,
     options: [
@@ -292,6 +308,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Silver Dollar Eucalyptus Greens',
     productType: 'Eucalyptus',
     category: 'Greenery',
+    stemsPerBunch: 5,
     image: 'https://cdn.shopify.com/s/files/1/0516/8968/5154/files/silver-dollar-eucalyptus-greens-wholesale-flowers-close-up_7fe7d_w69f2.webp?v=1771440199',
     selectedOption: 0,
     options: [
@@ -306,6 +323,7 @@ const SHOPIFY_PRODUCTS = {
     name: 'Israeli Ruscus Greenery',
     productType: 'Greenery',
     category: 'Greenery',
+    stemsPerBunch: 10,
     image: 'https://cdn.shopify.com/s/files/1/0637/5522/3180/files/israeli-ruscus-310-close_d00b333c_otw90.webp?v=1755635846',
     selectedOption: 0,
     options: [
@@ -319,10 +337,11 @@ const SHOPIFY_PRODUCTS = {
 
   // Additional Focal Flowers
   romanticAntiquePinkRose: {
-    productHandle: 'romantic-antique-pink-cabbage-garden-rose',
+    productHandle: 'cabbage-garden-rose-romantic-antique-pink',
     name: 'Romantic Antique Pink Cabbage Garden Rose',
     productType: 'Roses Garden',
     category: 'Focal Flowers',
+    stemsPerBunch: 12,
     image: 'https://cdn.shopify.com/s/files/1/0637/5522/3180/files/cabbage-garden-rose-romantic-antique-pink-wholesale-flowers-close-up_764be_l6jd4.webp?v=1766611270',
     selectedOption: 0,
     options: [
@@ -390,7 +409,7 @@ export const sampleProposals = [
         description: 'Elegant hand-tied bouquet of roses, peonies, and soft greenery',
         ingredients: [
           { productHandle: 'quicksand-cream-roses', name: 'Quicksand Roses', count: 3 },
-          { productHandle: 'romantic-antique-pink-cabbage-garden-rose', name: 'Romantic Antique Pink Rose', count: 1 },
+          { productHandle: 'cabbage-garden-rose-romantic-antique-pink', name: 'Romantic Antique Pink Rose', count: 1 },
           { productHandle: 'creamy-white-spray-bulk-roses', name: 'Creamy White Bulk Spray Roses', count: 2 },
           { productHandle: 'israeli-ruscus-greenery', name: 'Israeli Ruscus Greenery', count: 0.5 },
         ],
@@ -403,7 +422,7 @@ export const sampleProposals = [
         description: 'Delicate matching bouquets of pastel blooms with light greenery accents',
         ingredients: [
           { productHandle: 'quicksand-cream-roses', name: 'Quicksand Roses', count: 3 },
-          { productHandle: 'romantic-antique-pink-cabbage-garden-rose', name: 'Romantic Antique Pink Rose', count: 1 },
+          { productHandle: 'cabbage-garden-rose-romantic-antique-pink', name: 'Romantic Antique Pink Rose', count: 1 },
           { productHandle: 'creamy-white-spray-bulk-roses', name: 'Creamy White Bulk Spray Roses', count: 2 },
           { productHandle: 'israeli-ruscus-greenery', name: 'Israeli Ruscus Greenery', count: 0.5 },
         ],
@@ -460,7 +479,7 @@ export const sampleProposals = [
         description: 'Low floral centerpiece with seasonal blooms and soft greenery accents',
         ingredients: [
           { productHandle: 'quicksand-cream-roses', name: 'Quicksand Roses', count: 3 },
-          { productHandle: 'romantic-antique-pink-cabbage-garden-rose', name: 'Romantic Antique Pink Rose', count: 1 },
+          { productHandle: 'cabbage-garden-rose-romantic-antique-pink', name: 'Romantic Antique Pink Rose', count: 1 },
           { productHandle: 'creamy-white-spray-bulk-roses', name: 'Creamy White Bulk Spray Roses', count: 2 },
           { productHandle: 'israeli-ruscus-greenery', name: 'Israeli Ruscus Greenery', count: 0.5 },
         ],
