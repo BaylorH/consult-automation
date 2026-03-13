@@ -303,19 +303,18 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                 <p className="mb-1">Subtotal:</p>
                 <p className="mb-1">Consultation Discount ({discountPercent}%):</p>
                 <p className="mb-0 mt-3 text-[16px]">Total:</p>
-                {deliveryDate && (
-                  <p className="mb-0 mt-4 text-[14px]">Delivery Date:</p>
-                )}
               </div>
               <div className="font-['Avenir:Roman',sans-serif] text-[14px] text-black text-right">
                 <p className="mb-1">{formatPrice(subtotal)}</p>
                 <p className="mb-1">-{formatPrice(discount)}</p>
                 <p className="mb-0 mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">{formatPrice(total)}</p>
-                {deliveryDate && (
-                  <p className="mb-0 mt-4 text-[14px]">{formatDeliveryDate(deliveryDate)}</p>
-                )}
               </div>
             </div>
+            {deliveryDate && (
+              <p className="font-['Avenir:Heavy',sans-serif] text-[14px] text-black mt-4">
+                Delivery Date: <span className="font-['Avenir:Roman',sans-serif]">{formatDeliveryDate(deliveryDate)}</span>
+              </p>
+            )}
             <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] mt-4">
               Your discount will be applied at checkout.
             </p>
