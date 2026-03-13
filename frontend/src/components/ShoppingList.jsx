@@ -277,7 +277,7 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                               ))}
                             </div>
                           )}
-                          <p className="mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">
+                          <p className="mt-4 font-['Avenir:Heavy',sans-serif] text-[18px]">
                             {formatPrice(itemPrice)}
                           </p>
                         </>
@@ -286,38 +286,38 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                         <>
                           {/* Breakdown showing how stems add up */}
                           {item.usedIn && item.usedIn.length > 0 && (
-                            <div className="mb-2 text-[13px] text-[#555]">
+                            <div className="mb-4 text-[13px] text-[#555]">
                               {item.usedIn.map((u, uIdx) => {
                                 const lineTotal = u.stemsPerRecipe * u.recipeQty;
                                 return (
-                                  <div key={uIdx} className="flex gap-[8px]">
-                                    <span className="w-[180px]">
-                                      {u.stemsPerRecipe} × {u.recipeName}{u.recipeQty > 1 ? ` (×${u.recipeQty})` : ''}
+                                  <div key={uIdx} className="flex gap-[8px] mb-1">
+                                    <span className="w-[220px]">
+                                      {u.stemsPerRecipe} stem{u.stemsPerRecipe !== 1 ? 's' : ''} × {u.recipeName}{u.recipeQty > 1 ? ` (×${u.recipeQty})` : ''}
                                     </span>
                                     <span>=</span>
-                                    <span className="w-[50px] text-right">{lineTotal}</span>
+                                    <span className="w-[70px] text-right">{lineTotal} stems</span>
                                   </div>
                                 );
                               })}
                               {item.usedIn.length > 1 && (
-                                <div className="flex gap-[8px] border-t border-[#ccc] mt-1 pt-1">
-                                  <span className="w-[180px] font-['Avenir:Heavy',sans-serif]">Total Needed</span>
-                                  <span>=</span>
-                                  <span className="w-[50px] text-right font-['Avenir:Heavy',sans-serif]">{item.stemsNeeded}</span>
+                                <div className="flex gap-[8px] border-t-2 border-[#4a9380] mt-2 pt-2">
+                                  <span className="w-[220px] font-['Avenir:Heavy',sans-serif] text-[15px] text-[#333]">Total Needed</span>
+                                  <span className="text-[15px] text-[#333]">=</span>
+                                  <span className="w-[70px] text-right font-['Avenir:Heavy',sans-serif] text-[15px] text-[#333]">{item.stemsNeeded} stems</span>
                                 </div>
                               )}
                             </div>
                           )}
                           {/* Simple needed display if only one recipe or no breakdown */}
                           {(!item.usedIn || item.usedIn.length <= 1) && (
-                            <p className="mb-2">
+                            <p className="mb-4 text-[15px]">
                               <span className="font-['Avenir:Heavy',sans-serif]">Needed</span>
-                              <span>: {item.stemsNeeded} Stems</span>
+                              <span>: {item.stemsNeeded} stems</span>
                             </p>
                           )}
                           {/* All variant options */}
                           {item.allVariants && item.allVariants.length > 0 && (
-                            <div className="flex flex-col gap-[6px] mt-2">
+                            <div className="flex flex-col gap-[8px] mt-3">
                               {item.allVariants.map((variant, optIdx) => {
                                 const extraStems = variant.stemCount > item.stemsNeeded
                                   ? variant.stemCount - item.stemsNeeded
@@ -336,7 +336,7 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                                     <p className="font-['Avenir:Roman',sans-serif] text-[#333] text-[14px]">
                                       {variant.label} - {formatPrice(variant.price)}
                                       {extraStems > 0 && (
-                                        <span className="text-[#666] text-[12px] ml-1">(+{extraStems} extra)</span>
+                                        <span className="text-[#666] text-[12px] ml-1">(+{extraStems} extra stems)</span>
                                       )}
                                     </p>
                                     {optIdx === item.suggestedVariantIndex && (
@@ -349,7 +349,7 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                               })}
                             </div>
                           )}
-                          <p className="mt-3 font-['Avenir:Heavy',sans-serif] text-[16px]">
+                          <p className="mt-4 font-['Avenir:Heavy',sans-serif] text-[18px]">
                             {formatPrice(itemPrice)}
                           </p>
                         </>
