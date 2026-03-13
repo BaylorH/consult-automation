@@ -280,7 +280,7 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
 
         {/* Totals Section */}
         {shoppingItems.length > 0 && (
-          <div className="border border-[#ccc] border-solid rounded-[5px] p-[20px] mt-[20px] w-[450px]">
+          <div className="border border-[#ccc] border-solid rounded-[5px] p-[20px] mt-[20px] w-[550px] mx-auto">
             <div className="flex justify-between">
               <div className="font-['Avenir:Heavy',sans-serif] text-[14px] text-black">
                 <p className="mb-1">Subtotal:</p>
