@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import DashboardContent from './pages/DashboardContent';
 import ProposalFormContent from './pages/ProposalFormContent';
 import DevTools from './components/DevTools';
+import SplashCursor from './components/SplashCursor';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -63,6 +64,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SplashCursor />
         <AppRoutes />
         <DevTools />
       </AuthProvider>
