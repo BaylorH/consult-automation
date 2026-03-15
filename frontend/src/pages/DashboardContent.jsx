@@ -1,4 +1,5 @@
 // DashboardContent - Main content only (Layout provides sidebar)
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProposals } from '../hooks/useProposals';
 
@@ -71,17 +72,13 @@ export default function DashboardContent() {
             Recent Proposals
           </p>
 
+          {/* Loading skeleton cards with shimmer effect */}
           {loading && (
-            <div className="w-full flex flex-col items-center justify-center py-16">
-              {/* Spinner */}
-              <div className="relative mb-4">
-                <div className="w-12 h-12 rounded-full border-4 border-[#e6e6e6]" />
-                <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-transparent border-t-[#4a9380] animate-spin" />
-              </div>
-              <p className="font-['Avenir:Roman',sans-serif] text-[#666] text-[14px]">
-                Loading proposals...
-              </p>
-            </div>
+            <>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <SkeletonCard key={i} delay={i * 0.1} />
+              ))}
+            </>
           )}
 
           {error && (
@@ -101,7 +98,7 @@ export default function DashboardContent() {
             </div>
           )}
 
-          {!loading && !error && proposals.map((proposal) => (
+          {!loading && !error && proposals.map((proposal, index) => (
             <ProposalCard
               key={proposal.id}
               type={LEVEL_LABELS[proposal.consultationLevel] || proposal.consultationLevel || 'Basic'}
@@ -111,17 +108,97 @@ export default function DashboardContent() {
               date={formatDate(proposal.eventDate)}
               author={proposal.author}
               onEdit={() => navigate(`/proposal/${proposal.id}`)}
+              index={index}
             />
           ))}
         </div>
+      </div>
+
+      {/* Shimmer animation styles */}
+      <style>{`
+        @keyframes tealShimmer {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        @keyframes cardFadeIn {
+          0% {
+            opacity: 0;
+            transform: translateY(15px) scale(0.95);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .shimmer {
+          background: linear-gradient(
+            90deg,
+            #e5e7eb 0%,
+            #e5e7eb 40%,
+            rgba(74, 147, 128, 0.3) 50%,
+            #e5e7eb 60%,
+            #e5e7eb 100%
+          );
+          background-size: 200% 100%;
+          animation: tealShimmer 1.8s ease-in-out infinite;
+        }
+
+        .card-enter {
+          animation: cardFadeIn 0.5s ease-out forwards;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// Skeleton loading card with shimmer effect
+function SkeletonCard({ delay = 0 }) {
+  return (
+    <div
+      className="bg-white border border-[#e5e7eb] border-solid flex flex-col gap-[10px] p-[10px] rounded-[5px] w-[211px]"
+      style={{ animationDelay: `${delay}s` }}
+    >
+      {/* Type badge skeleton */}
+      <div className="shimmer h-[22px] w-[80px] rounded-[50px] mx-auto" />
+
+      {/* Title skeleton */}
+      <div className="shimmer h-[16px] w-[90%] rounded" />
+      <div className="shimmer h-[16px] w-[60%] rounded" />
+
+      {/* Image skeleton */}
+      <div className="shimmer w-full h-[200px] rounded" />
+
+      {/* Date/Author skeleton */}
+      <div className="flex flex-col gap-[4px]">
+        <div className="shimmer h-[12px] w-[70%] rounded" />
+        <div className="shimmer h-[12px] w-[50%] rounded" />
+      </div>
+
+      {/* Buttons skeleton */}
+      <div className="flex gap-[5px]">
+        <div className="shimmer h-[28px] w-[45px] rounded" />
+        <div className="shimmer h-[28px] w-[45px] rounded" />
+        <div className="shimmer h-[28px] w-[65px] rounded" />
       </div>
     </div>
   );
 }
 
-function ProposalCard({ type, typeColor, title, image, date, author, onEdit }) {
+function ProposalCard({ type, typeColor, title, image, date, author, onEdit, index = 0 }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   return (
-    <div className="bg-white border border-[#999] border-solid flex flex-col gap-[10px] p-[10px] rounded-[5px] w-[211px]">
+    <div
+      className="bg-white border border-[#999] border-solid flex flex-col gap-[10px] p-[10px] rounded-[5px] w-[211px] card-enter"
+      style={{ animationDelay: `${index * 0.08}s` }}
+    >
       <div className="flex items-center justify-center overflow-clip px-[12px] py-[4px] rounded-[50px]" style={{ backgroundColor: typeColor }}>
         <p className="font-['Avenir:Roman',sans-serif] text-[10px] text-white whitespace-nowrap">
           {type}
@@ -130,8 +207,25 @@ function ProposalCard({ type, typeColor, title, image, date, author, onEdit }) {
       <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[14px] uppercase">
         {title}
       </p>
-      <div className="flex items-center justify-center overflow-clip w-full h-[200px]">
-        <img alt="" className="max-w-none object-cover h-[200px]" src={image} />
+      <div className="flex items-center justify-center overflow-clip w-full h-[200px] relative">
+        {/* Shimmer placeholder while image loads */}
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 shimmer rounded" />
+        )}
+        {/* Error state */}
+        {imageError && (
+          <div className="absolute inset-0 bg-[#f3f4f6] flex items-center justify-center">
+            <span className="text-[#999] text-[12px]">Image unavailable</span>
+          </div>
+        )}
+        {/* Actual image */}
+        <img
+          alt=""
+          className={`max-w-none object-cover h-[200px] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          src={image}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
+        />
       </div>
       <div className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
         <p className="mb-0">Event: {date}</p>
