@@ -7,6 +7,7 @@ import FlowerChatEmbed from '../components/FlowerChatEmbed';
 import { useProposal, useProposals, proposalService } from '../hooks/useProposals';
 import { Timestamp } from 'firebase/firestore';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
+import { HandWrittenTitle } from '../components/ui/HandWrittenTitle';
 
 // Local image assets (downloaded from Figma)
 import addPhotoIcon from '../assets/images/add-photo-icon.png';
@@ -816,11 +817,9 @@ export default function ProposalFormContent() {
 
   return (
     <div className="flex flex-col gap-[15px] p-[15px] pb-[30px]">
-      {/* Header */}
-      <div className="flex items-center gap-[20px] px-[15px] py-[15px]">
-        <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
-          {isNewProposal && !proposalId ? 'Proposal Builder > New Proposal' : 'Proposal Builder > Edit Proposal'}
-        </p>
+      {/* Animated Header */}
+      <div className="flex items-center gap-[20px]">
+        <HandWrittenTitle title={id === 'new' ? 'Proposal Builder' : 'Edit Proposal'} />
         {/* Save Status - inline after title (only show if there's content) */}
         {hasContent && (
           <div className="flex items-center gap-[8px]">
