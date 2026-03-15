@@ -75,7 +75,7 @@ export default function DashboardContent() {
           {/* Loading skeleton cards with shimmer effect */}
           {loading && (
             <>
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              {[...Array(16)].map((_, i) => (
                 <SkeletonCard key={i} delay={i * 0.1} />
               ))}
             </>
