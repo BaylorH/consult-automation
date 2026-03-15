@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProposals } from '../hooks/useProposals';
+import { useSplashCursor } from '../App';
 
 // Local assets (bundled, instant load)
 import logoMain from '../assets/images/logo-main.png';
@@ -16,6 +17,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { proposals, loading } = useProposals();
+  const { splashCursorEnabled, toggleSplashCursor } = useSplashCursor();
 
   // Get current proposal ID from URL
   const pathParts = location.pathname.split('/');
@@ -92,9 +94,15 @@ export default function Layout({ children }) {
         <div className="h-[93px] relative shrink-0 w-[68px]" data-name="Screenshot 2026-01-18 at 4.19.38 PM 1">
           <img alt="FiftyFlowers Logo" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={logoMain} />
         </div>
-        <div className="h-[32px] relative shrink-0 w-[29px]" data-name="Screenshot 2026-01-18 at 4.27.23 PM 1">
-          <img alt="Flower Icon" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={logoFlower} />
-        </div>
+        <button
+          onClick={toggleSplashCursor}
+          className={`h-[32px] relative shrink-0 w-[29px] cursor-pointer transition-all duration-300 hover:scale-110 ${
+            splashCursorEnabled ? 'drop-shadow-[0_0_8px_rgba(74,147,128,0.8)]' : ''
+          }`}
+          title={splashCursorEnabled ? 'Disable cursor effect' : 'Enable cursor effect'}
+        >
+          <img alt="Flower Icon" className="absolute inset-0 max-w-none object-cover size-full" src={logoFlower} />
+        </button>
       </div>
 
       {/* Sidebar */}

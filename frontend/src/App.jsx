@@ -1,3 +1,4 @@
+import { useState, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
@@ -6,6 +7,13 @@ import DashboardContent from './pages/DashboardContent';
 import ProposalFormContent from './pages/ProposalFormContent';
 import DevTools from './components/DevTools';
 import SplashCursor from './components/SplashCursor';
+
+// Context for the Easter egg SplashCursor toggle
+const SplashCursorContext = createContext(null);
+
+export function useSplashCursor() {
+  return useContext(SplashCursorContext);
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -61,12 +69,21 @@ function AppRoutes() {
 }
 
 export default function App() {
+  // Easter egg: SplashCursor defaults to OFF
+  const [splashCursorEnabled, setSplashCursorEnabled] = useState(false);
+
+  const toggleSplashCursor = () => {
+    setSplashCursorEnabled(prev => !prev);
+  };
+
   return (
     <BrowserRouter>
       <AuthProvider>
-        <SplashCursor />
-        <AppRoutes />
-        <DevTools />
+        <SplashCursorContext.Provider value={{ splashCursorEnabled, toggleSplashCursor }}>
+          {splashCursorEnabled && <SplashCursor />}
+          <AppRoutes />
+          <DevTools />
+        </SplashCursorContext.Provider>
       </AuthProvider>
     </BrowserRouter>
   );
