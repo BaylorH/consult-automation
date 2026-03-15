@@ -1,4 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
+import BackgroundPaths from '../components/BackgroundPaths';
 
 // FiftyFlowers logo (bundled asset)
 import logoMain from '../assets/images/logo-main.png';
@@ -14,19 +15,14 @@ export default function Login() {
       {/* Secondary gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#1a3d32]/50 via-transparent to-[#5ab89d]/20" />
 
-      {/* Organic geometric pattern - petal/leaf inspired */}
-      <div
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Ccircle cx='40' cy='40' r='3'/%3E%3Ccircle cx='0' cy='40' r='3'/%3E%3Ccircle cx='80' cy='40' r='3'/%3E%3Ccircle cx='40' cy='0' r='3'/%3E%3Ccircle cx='40' cy='80' r='3'/%3E%3Cpath d='M40 20c5 0 9 4 9 9s-4 9-9 9-9-4-9-9 4-9 9-9zm0 2c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z' opacity='.5'/%3E%3Cpath d='M20 40c0 5-4 9-9 9s-9-4-9-9 4-9 9-9 9 4 9 9zm-2 0c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7 7-3.13 7-7z' opacity='.5'/%3E%3Cpath d='M80 40c0 5-4 9-9 9s-9-4-9-9 4-9 9-9 9 4 9 9zm-2 0c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7 7-3.13 7-7z' opacity='.5'/%3E%3Cpath d='M40 60c5 0 9 4 9 9s-4 9-9 9-9-4-9-9 4-9 9-9zm0 2c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z' opacity='.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
+      {/* Animated flowing paths */}
+      <BackgroundPaths />
 
       {/* Soft radial glow behind card */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
 
       {/* Main content */}
-      <div className="relative flex-1 flex items-center justify-center p-6">
+      <div className="relative flex-1 flex items-center justify-center p-6 z-10">
         <div className="w-full max-w-md">
           {/* White Card */}
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
