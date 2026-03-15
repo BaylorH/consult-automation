@@ -96,10 +96,7 @@ export default function Layout({ children }) {
         </div>
         <button
           onClick={toggleSplashCursor}
-          className={`h-[32px] relative shrink-0 w-[29px] cursor-pointer transition-all duration-300 hover:scale-110 ${
-            splashCursorEnabled ? 'drop-shadow-[0_0_8px_rgba(74,147,128,0.8)]' : ''
-          }`}
-          title={splashCursorEnabled ? 'Disable cursor effect' : 'Enable cursor effect'}
+          className="h-[32px] relative shrink-0 w-[29px] cursor-pointer"
         >
           <img alt="Flower Icon" className="absolute inset-0 max-w-none object-cover size-full" src={logoFlower} />
         </button>
