@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProposals } from '../hooks/useProposals';
+import { HandWrittenTitle } from '../components/ui/HandWrittenTitle';
 
 // Inline SVG icon (no network request, instant load)
 const InfoIcon = () => (
@@ -58,11 +59,9 @@ export default function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-[15px] p-[15px] pb-[30px]">
-      {/* Header */}
-      <div className="flex gap-[10px] items-center px-[15px] py-[15px]">
-        <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px]">
-          Proposals
-        </p>
+      {/* Animated Header */}
+      <div className="flex gap-[10px] items-center">
+        <HandWrittenTitle title="Proposals" />
       </div>
 
       {/* Main Content Card */}
