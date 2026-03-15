@@ -65,6 +65,22 @@ export default function ProposalFormContent() {
   const saveTimeoutRef = useRef(null);
   const AUTOSAVE_DELAY = 1500; // 1.5 seconds after last change
 
+  // Reset form when navigating to new proposal
+  useEffect(() => {
+    if (id === 'new') {
+      setFormData(defaultFormData);
+      setInspirationImages([]);
+      setColorPalette([]);
+      setFeaturedBlooms([]);
+      setRecipes([]);
+      setProposalId(null);
+      setSaveStatus('idle');
+      setHasInitialized(true);
+      setShowCreateRecipe(false);
+      setEditingRecipeId(null);
+    }
+  }, [id]);
+
   // Create Recipe form state
   const [showCreateRecipe, setShowCreateRecipe] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState(null); // null = creating new, otherwise editing
