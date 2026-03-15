@@ -90,7 +90,7 @@ export default function Layout({ children }) {
         </div>
       )}
       {/* Left Icons Column */}
-      <div className="content-stretch flex flex-col gap-[30px] items-center py-[15px] shrink-0 bg-white">
+      <div className="sticky top-0 h-screen flex flex-col gap-[30px] items-center py-[15px] shrink-0 bg-white">
         <div className="h-[93px] relative shrink-0 w-[68px]" data-name="Screenshot 2026-01-18 at 4.19.38 PM 1">
           <img alt="FiftyFlowers Logo" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={logoMain} />
         </div>
@@ -106,7 +106,7 @@ export default function Layout({ children }) {
       </div>
 
       {/* Sidebar */}
-      <div className="bg-[#f3f5f6] border-r border-[#e6e6e6] flex flex-col gap-[15px] py-[15px] shrink-0 w-[220px]">
+      <div className="sticky top-0 h-screen overflow-y-auto bg-[#f3f5f6] border-r border-[#e6e6e6] flex flex-col gap-[15px] py-[15px] shrink-0 w-[220px]">
         <div className="border-[#e6e6e6] border-b border-solid flex items-center justify-center p-[15px]">
           <p className="font-['Avenir:Heavy',sans-serif] leading-[normal] text-[#161616] text-[18px] whitespace-nowrap">
             Proposal Manager
