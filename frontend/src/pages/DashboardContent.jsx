@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProposals } from '../hooks/useProposals';
 import { HandWrittenTitle } from '../components/ui/HandWrittenTitle';
+import { GlowingEffect } from '../components/ui/GlowingEffect';
 
 // Inline SVG icon (no network request, instant load)
 const InfoIcon = () => (
@@ -195,51 +196,61 @@ function ProposalCard({ type, typeColor, title, image, date, author, onEdit, ind
 
   return (
     <div
-      className="bg-white border border-[#999] border-solid flex flex-col gap-[10px] p-[10px] rounded-[5px] w-[211px] card-enter"
+      className="relative rounded-[8px] p-[3px] card-enter"
       style={{ animationDelay: `${index * 0.08}s` }}
     >
-      <div className="flex items-center justify-center overflow-clip px-[12px] py-[4px] rounded-[50px]" style={{ backgroundColor: typeColor }}>
-        <p className="font-['Avenir:Roman',sans-serif] text-[10px] text-white whitespace-nowrap">
-          {type}
+      <GlowingEffect
+        spread={40}
+        glow={true}
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+        borderWidth={2}
+      />
+      <div className="bg-white border border-[#999] border-solid flex flex-col gap-[10px] p-[10px] rounded-[5px] w-[211px] relative">
+        <div className="flex items-center justify-center overflow-clip px-[12px] py-[4px] rounded-[50px]" style={{ backgroundColor: typeColor }}>
+          <p className="font-['Avenir:Roman',sans-serif] text-[10px] text-white whitespace-nowrap">
+            {type}
+          </p>
+        </div>
+        <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[14px] uppercase">
+          {title}
         </p>
-      </div>
-      <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[14px] uppercase">
-        {title}
-      </p>
-      <div className="flex items-center justify-center overflow-clip w-full h-[200px] relative">
-        {/* Shimmer placeholder while image loads */}
-        {!imageLoaded && !imageError && (
-          <div className="absolute inset-0 shimmer rounded" />
-        )}
-        {/* Error state */}
-        {imageError && (
-          <div className="absolute inset-0 bg-[#f3f4f6] flex items-center justify-center">
-            <span className="text-[#999] text-[12px]">Image unavailable</span>
-          </div>
-        )}
-        {/* Actual image */}
-        <img
-          alt=""
-          className={`max-w-none object-cover h-[200px] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          src={image}
-          onLoad={() => setImageLoaded(true)}
-          onError={() => setImageError(true)}
-        />
-      </div>
-      <div className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
-        <p className="mb-0">Event: {date}</p>
-        <p>by: {author}</p>
-      </div>
-      <div className="flex gap-[5px]">
-        <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
-          View
-        </button>
-        <button onClick={onEdit} className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6]">
-          Edit
-        </button>
-        <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
-          Duplicate
-        </button>
+        <div className="flex items-center justify-center overflow-clip w-full h-[200px] relative">
+          {/* Shimmer placeholder while image loads */}
+          {!imageLoaded && !imageError && (
+            <div className="absolute inset-0 shimmer rounded" />
+          )}
+          {/* Error state */}
+          {imageError && (
+            <div className="absolute inset-0 bg-[#f3f4f6] flex items-center justify-center">
+              <span className="text-[#999] text-[12px]">Image unavailable</span>
+            </div>
+          )}
+          {/* Actual image */}
+          <img
+            alt=""
+            className={`max-w-none object-cover h-[200px] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            src={image}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+        </div>
+        <div className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
+          <p className="mb-0">Event: {date}</p>
+          <p>by: {author}</p>
+        </div>
+        <div className="flex gap-[5px]">
+          <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
+            View
+          </button>
+          <button onClick={onEdit} className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6]">
+            Edit
+          </button>
+          <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
+            Duplicate
+          </button>
+        </div>
       </div>
     </div>
   );
