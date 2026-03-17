@@ -32,15 +32,20 @@ const IMAGES = {
   },
   // Presentation reference images (from Figma)
   presentation: {
-    inspiration1: '/images/presentation/inspiration-1.png',
-    inspiration2: '/images/presentation/inspiration-2.png',
-    inspiration3: '/images/presentation/inspiration-3.png',
-    inspiration4: '/images/presentation/inspiration-4.png',
-    recipeBridal: '/images/presentation/recipe-bride-bouquet.png',
-    recipeBridesmaids: '/images/presentation/recipe-bridesmaid.png',
-    recipeBoutonniere: '/images/presentation/recipe-boutonniere.png',
-    recipeGroomsmen: '/images/presentation/recipe-groomsmen.png',
-    recipeCenterpiece: '/images/presentation/recipe-centerpiece.png',
+    inspiration1: '/presentation/inspiration-1.png',
+    inspiration2: '/presentation/inspiration-2.png',
+    inspiration3: '/presentation/inspiration-3.png',
+    inspiration4: '/presentation/inspiration-4.png',
+    inspiration5: '/presentation/inspiration-5.png',
+    inspiration6: '/presentation/inspiration-6.png',
+    inspiration7: '/presentation/inspiration-7.png',
+    inspiration8: '/presentation/inspiration-8.png',
+    inspiration9: '/presentation/inspiration-9.png',
+    recipeBridal: '/presentation/recipe-bride-bouquet.png',
+    recipeBridesmaids: '/presentation/recipe-bridesmaid.png',
+    recipeBoutonniere: '/presentation/recipe-boutonniere.png',
+    recipeGroomsmen: '/presentation/recipe-groomsmen.png',
+    recipeCenterpiece: '/presentation/recipe-centerpiece.png',
   },
 };
 
@@ -378,12 +383,17 @@ export const sampleProposals = [
     deliveryDate: Timestamp.fromDate(new Date('2026-03-26')),
     styleNotes: 'Colorful garden wedding with a mix of bold and soft tones. Love ranunculus, anemones, and garden roses. Outdoor ceremony in a greenhouse setting with rustic barn reception.',
 
-    // Inspiration images (4 images matching presentation)
+    // Inspiration images (9 images matching Figma presentation)
     inspirationImages: [
       IMAGES.presentation.inspiration1,
       IMAGES.presentation.inspiration2,
       IMAGES.presentation.inspiration3,
       IMAGES.presentation.inspiration4,
+      IMAGES.presentation.inspiration5,
+      IMAGES.presentation.inspiration6,
+      IMAGES.presentation.inspiration7,
+      IMAGES.presentation.inspiration8,
+      IMAGES.presentation.inspiration9,
     ],
 
     // Color palette (6 colors from presentation)
@@ -487,8 +497,7 @@ export const sampleProposals = [
     ],
 
     // Shopping list / coupon fields (for presentation)
-    couponCode: 'LUCIAFLOWERS',
-    discountPercent: 5,
+    couponCode: 'Consult2026',
 
     updatedAt: Timestamp.fromDate(new Date('2026-03-12')),
     createdAt: Timestamp.fromDate(new Date('2026-02-01')),
@@ -578,8 +587,7 @@ export const sampleProposals = [
       },
     ],
 
-    couponCode: 'SMITHWEDDING',
-    discountPercent: 5,
+    couponCode: 'Consult2026',
 
     updatedAt: Timestamp.fromDate(new Date('2026-03-20')),
     createdAt: Timestamp.fromDate(new Date('2026-02-15')),

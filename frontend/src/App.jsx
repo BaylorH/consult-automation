@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Layout from './components/Layout';
 import DashboardContent from './pages/DashboardContent';
 import ProposalFormContent from './pages/ProposalFormContent';
+import PresentationPage from './pages/PresentationPage';
 import DevTools from './components/DevTools';
 import SplashCursor from './components/SplashCursor';
 
@@ -61,6 +62,14 @@ function AppRoutes() {
             <Layout>
               <ProposalFormContent />
             </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/proposal/:id/presentation"
+        element={
+          <ProtectedRoute>
+            <PresentationPage />
           </ProtectedRoute>
         }
       />

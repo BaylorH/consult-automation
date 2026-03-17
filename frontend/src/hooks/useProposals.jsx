@@ -115,7 +115,9 @@ export function useProposals() {
 }
 
 // Hook to fetch a single proposal by ID (for edit form)
-export function useProposal(id) {
+// Options: { skipCache: boolean } - skip session storage cache (useful for presentation)
+export function useProposal(id, options = {}) {
+  const { skipCache = false } = options;
   const [proposal, setProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -129,12 +131,14 @@ export function useProposal(id) {
 
     const fetchProposal = async () => {
       try {
-        // Check cache first
-        const cached = getCache(CACHE_PREFIX + id);
-        if (cached) {
-          setProposal(cached);
-          setLoading(false);
-          return;
+        // Check cache first (unless skipCache is true)
+        if (!skipCache) {
+          const cached = getCache(CACHE_PREFIX + id);
+          if (cached) {
+            setProposal(cached);
+            setLoading(false);
+            return;
+          }
         }
 
         setLoading(true);
@@ -159,7 +163,7 @@ export function useProposal(id) {
     };
 
     fetchProposal();
-  }, [id]);
+  }, [id, skipCache]);
 
   return { proposal, loading, error };
 }

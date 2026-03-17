@@ -2,11 +2,30 @@
 // For Professional: calculates stems from recipes
 // For Basic: uses featured blooms directly with their selected variant
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 
-export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasicConsultation = false, deliveryDate = '' }) {
+export default function ShoppingList({
+  recipes = [],
+  featuredBlooms = [],
+  isBasicConsultation = false,
+  deliveryDate = '',
+  couponCode = 'Consult2026',
+  discountPercent = 15,
+  savedSelections = {},  // Persisted selections from Firestore
+  onSelectionsChange = null  // Callback to save selections
+}) {
   // Track selected variant for each item (by product handle)
-  const [selections, setSelections] = useState({});
+  // Initialize from saved selections
+  const [selections, setSelections] = useState(savedSelections);
+  const initializedRef = useRef(false);
+
+  // Sync selections when savedSelections changes (e.g., on load)
+  useEffect(() => {
+    if (!initializedRef.current && Object.keys(savedSelections).length > 0) {
+      setSelections(savedSelections);
+      initializedRef.current = true;
+    }
+  }, [savedSelections]);
   // Helper to extract quantity and unit from variant label
   // Handles formats like:
   //   "25 Roses (1 Bunch)" → 25 stems (explicit stem count)
@@ -211,10 +230,15 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
 
   // Handle variant selection
   const handleVariantSelect = (productHandle, variantIndex) => {
-    setSelections(prev => ({
-      ...prev,
+    const newSelections = {
+      ...selections,
       [productHandle]: variantIndex
-    }));
+    };
+    setSelections(newSelections);
+    // Notify parent to persist selections
+    if (onSelectionsChange) {
+      onSelectionsChange(newSelections);
+    }
   };
 
   // Calculate totals using selected variants
@@ -223,7 +247,6 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
     const selectedVariant = item.allVariants?.[selectedIdx];
     return sum + (selectedVariant?.price || item.price || 0);
   }, 0);
-  const discountPercent = 15; // Consultation discount
   const discount = subtotal * (discountPercent / 100);
   const total = subtotal - discount;
 
@@ -548,10 +571,12 @@ export default function ShoppingList({ recipes = [], featuredBlooms = [], isBasi
                     <td className="py-[6px] font-['Avenir:Roman',sans-serif] text-[#555]">Subtotal</td>
                     <td className="py-[6px] text-right font-['Avenir:Roman',sans-serif] text-[#333]">{formatPrice(subtotal)}</td>
                   </tr>
-                  <tr>
-                    <td className="py-[6px] font-['Avenir:Roman',sans-serif] text-[#555]">Consultation Discount ({discountPercent}%)</td>
-                    <td className="py-[6px] text-right font-['Avenir:Roman',sans-serif] text-[#4a9380]">-{formatPrice(discount)}</td>
-                  </tr>
+                  {discountPercent > 0 && (
+                    <tr>
+                      <td className="py-[6px] font-['Avenir:Roman',sans-serif] text-[#555]">Consultation Discount ({discountPercent}%)</td>
+                      <td className="py-[6px] text-right font-['Avenir:Roman',sans-serif] text-[#4a9380]">-{formatPrice(discount)}</td>
+                    </tr>
+                  )}
                   <tr className="border-t-2 border-[#4a9380]">
                     <td className="pt-[12px] font-['Avenir:Heavy',sans-serif] text-[16px] text-[#333]">Total</td>
                     <td className="pt-[12px] text-right font-['Avenir:Heavy',sans-serif] text-[20px] text-[#333]">{formatPrice(total)}</td>

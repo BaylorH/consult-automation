@@ -8,6 +8,7 @@ import { useProposal, useProposals, proposalService } from '../hooks/useProposal
 import { Timestamp } from 'firebase/firestore';
 import { useProductSearch, formatPrice } from '../hooks/useProductSearch';
 import { HandWrittenTitle } from '../components/ui/HandWrittenTitle';
+import { getDiscountForCode, getAvailableCodes } from '../utils/couponCodes';
 
 // Local image assets (downloaded from Figma)
 import addPhotoIcon from '../assets/images/add-photo-icon.png';
@@ -44,6 +45,7 @@ const defaultFormData = {
   eventDate: '',
   deliveryDate: '',
   styleNotes: '',
+  couponCode: 'Consult2026',
 };
 
 export default function ProposalFormContent() {
@@ -57,14 +59,25 @@ export default function ProposalFormContent() {
   const [colorPalette, setColorPalette] = useState([]);
   const [featuredBlooms, setFeaturedBlooms] = useState([]);
   const [recipes, setRecipes] = useState([]);
+  const [shoppingListSelections, setShoppingListSelections] = useState({});
 
   // Auto-save state
   const [proposalId, setProposalId] = useState(id === 'new' ? null : id);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saved', 'saving', 'unsaved', 'error'
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const justLoadedRef = useRef(false); // Flag to skip auto-save after loading
   const saveTimeoutRef = useRef(null);
   const AUTOSAVE_DELAY = 1500; // 1.5 seconds after last change
+
+  // Track scroll position for sticky header shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Reset form when navigating to new proposal
   useEffect(() => {
@@ -238,6 +251,14 @@ export default function ProposalFormContent() {
         }
       };
 
+      // Validate coupon code - use default if invalid or missing
+      const availableCodes = getAvailableCodes();
+      const defaultCode = availableCodes[0]?.code || 'Consult2026';
+      const loadedCouponCode = proposal.couponCode;
+      const validCouponCode = loadedCouponCode && getDiscountForCode(loadedCouponCode) > 0
+        ? loadedCouponCode
+        : defaultCode;
+
       setFormData({
         customerName: proposal.customerName || '',
         customerEmail: proposal.customerEmail || '',
@@ -247,6 +268,7 @@ export default function ProposalFormContent() {
         eventDate: formatDateForInput(proposal.eventDate),
         deliveryDate: formatDateForInput(proposal.deliveryDate),
         styleNotes: proposal.styleNotes || '',
+        couponCode: validCouponCode,
       });
 
       // Load arrays from proposal
@@ -261,6 +283,9 @@ export default function ProposalFormContent() {
       }
       if (proposal.recipes) {
         setRecipes(proposal.recipes);
+      }
+      if (proposal.shoppingListSelections) {
+        setShoppingListSelections(proposal.shoppingListSelections);
       }
       // Mark as initialized after loading existing data
       // Set status to 'saved' since we're loading existing data, not making changes
@@ -309,6 +334,7 @@ export default function ProposalFormContent() {
       colorPalette,
       featuredBlooms,
       recipes,
+      shoppingListSelections,
     };
 
     try {
@@ -368,7 +394,7 @@ export default function ProposalFormContent() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, hasInitialized, saveProposal, hasContent]);
+  }, [formData, inspirationImages, colorPalette, featuredBlooms, recipes, shoppingListSelections, hasInitialized, saveProposal, hasContent]);
 
   const updateField = (field, value) => {
     setFormData(prev => {
@@ -619,7 +645,7 @@ export default function ProposalFormContent() {
 
   // Inspiration Images handlers
   const handleAddImage = () => {
-    if (inspirationImages.length >= 8) return;
+    if (inspirationImages.length >= 9) return;
     // Close color picker if open (no confirmation needed since we're switching)
     if (showColorPicker) {
       setShowColorPicker(false);
@@ -632,7 +658,7 @@ export default function ProposalFormContent() {
   };
 
   const handleSaveImageUrl = () => {
-    if (newImageUrl.trim() && inspirationImages.length < 8) {
+    if (newImageUrl.trim() && inspirationImages.length < 9) {
       setInspirationImages(prev => [...prev, newImageUrl.trim()]);
       setNewImageUrl('');
       setShowImageModal(false);
@@ -650,7 +676,7 @@ export default function ProposalFormContent() {
 
   // Shared function to process an image file (used by both file input and drag/drop)
   const processImageFile = (file) => {
-    if (file && inspirationImages.length < 8) {
+    if (file && inspirationImages.length < 9) {
       // Validate it's an image
       if (!file.type.startsWith('image/')) {
         return;
@@ -811,14 +837,14 @@ export default function ProposalFormContent() {
   // Show empty placeholders only if we have fewer than 4 items
   // Show "Add" button if we have fewer than 8 items
   const emptyImageSlots = Math.max(0, 4 - inspirationImages.length);
-  const showAddImageButton = inspirationImages.length < 8;
+  const showAddImageButton = inspirationImages.length < 9;
   const emptyColorSlots = Math.max(0, 4 - colorPalette.length);
   const showAddColorButton = colorPalette.length < 8;
 
   return (
-    <div className="flex flex-col gap-[15px] p-[15px] pb-[30px]">
-      {/* Animated Header */}
-      <div className="flex items-center gap-[20px]">
+    <div className="flex flex-col gap-[15px] pb-[30px]">
+      {/* Sticky Header */}
+      <div className={`sticky top-0 z-40 bg-white px-[15px] py-[15px] flex items-center gap-[20px] transition-shadow duration-200 ${isScrolled ? 'shadow-[0_1px_3px_rgba(0,0,0,0.08)]' : ''}`}>
         <HandWrittenTitle title={id === 'new' ? 'Proposal Builder' : 'Edit Proposal'} />
         {/* Save Status - inline after title (only show if there's content) */}
         {hasContent && (
@@ -849,7 +875,7 @@ export default function ProposalFormContent() {
       </div>
 
       {/* Main Form Container */}
-      <div className="bg-[#fcfdfd] border border-[#ccc] border-solid flex flex-col gap-[30px] p-[30px]">
+      <div className="bg-[#fcfdfd] border border-[#ccc] border-solid flex flex-col gap-[30px] p-[30px] mx-[15px]">
         {/* Consultation Proposal Set */}
         <div className="bg-white border border-[#eef0ef] border-solid flex flex-wrap gap-[30px] px-[15px] py-[30px] rounded-[15px] shadow-[0px_2px_2px_0px_rgba(0,0,0,0.25)]">
           <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px] w-full">
@@ -921,6 +947,28 @@ export default function ProposalFormContent() {
               className="border border-[#ccc] border-solid h-[45px] px-[15px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] outline-none cursor-pointer"
             />
           </FormField>
+
+          <FormField label="Coupon Code:">
+            <div className="flex items-center gap-[15px]">
+              <select
+                value={formData.couponCode}
+                onChange={(e) => updateField('couponCode', e.target.value)}
+                className="border border-[#ccc] border-solid h-[45px] px-[15px] w-[200px] font-['Avenir:Roman',sans-serif] text-[#666] text-[14px] bg-white outline-none cursor-pointer"
+              >
+                {getAvailableCodes().map(({ code }) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
+              <span className="font-['Avenir:Roman',sans-serif] text-[#4a9380] text-[14px] flex items-center gap-[5px]">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                {getDiscountForCode(formData.couponCode)}% off
+              </span>
+            </div>
+          </FormField>
         </div>
 
         {/* Inspiration & Style - Shows for BOTH Basic and Professional */}
@@ -929,7 +977,7 @@ export default function ProposalFormContent() {
 
           <div className="flex flex-col gap-[10px] w-full">
             <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[12px] uppercase">
-              Inspirational Images (Min 4, 8 max)
+              Inspirational Images (Min 4, 9 max)
             </p>
             <div className="flex flex-wrap gap-[30px] pb-[15px]">
               {/* Show existing images */}
@@ -1977,6 +2025,10 @@ export default function ProposalFormContent() {
                 featuredBlooms={featuredBlooms}
                 isBasicConsultation={isBasic}
                 deliveryDate={formData.deliveryDate}
+                couponCode={formData.couponCode}
+                discountPercent={getDiscountForCode(formData.couponCode)}
+                savedSelections={shoppingListSelections}
+                onSelectionsChange={setShoppingListSelections}
               />
             );
           }
@@ -2000,6 +2052,22 @@ export default function ProposalFormContent() {
             </div>
           );
         })()}
+
+        {/* View Presentation Button */}
+        {proposalId && (
+          <div className="flex justify-center pt-[20px]">
+            <button
+              onClick={() => navigate(`/proposal/${proposalId}/presentation`)}
+              className="bg-[#055e5a] text-white px-[40px] py-[15px] rounded-[8px] font-['Avenir:Heavy',sans-serif] text-[16px] hover:bg-[#044a48] transition-colors flex items-center gap-[10px] shadow-md cursor-pointer"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              View Presentation
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

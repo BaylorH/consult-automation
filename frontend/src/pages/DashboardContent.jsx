@@ -108,6 +108,7 @@ export default function DashboardContent() {
               date={formatDate(proposal.eventDate)}
               author={proposal.author}
               onEdit={() => navigate(`/proposal/${proposal.id}`)}
+              onView={() => navigate(`/proposal/${proposal.id}/presentation`)}
               index={index}
             />
           ))}
@@ -190,7 +191,7 @@ function SkeletonCard({ delay = 0 }) {
   );
 }
 
-function ProposalCard({ type, typeColor, title, image, date, author, onEdit, index = 0 }) {
+function ProposalCard({ type, typeColor, title, image, date, author, onEdit, onView, index = 0 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -241,7 +242,7 @@ function ProposalCard({ type, typeColor, title, image, date, author, onEdit, ind
           <p>by: {author}</p>
         </div>
         <div className="flex gap-[5px]">
-          <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
+          <button onClick={onView} className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6]">
             View
           </button>
           <button onClick={onEdit} className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6]">
