@@ -254,7 +254,23 @@ The SearchProducts Lambda function lives in the `f50-aws-lambda` repo. There are
 | `baylor/consult-automation` | PR branch for code review (SearchProducts changes only) |
 | `baylor/bb-dev-combined` | **Deployment branch** - includes SearchProducts + other features |
 
-#### Quick Deploy (Recommended)
+#### Quick Redeploy (When Asked to "Redeploy")
+
+When the user says "redeploy" or "deploy again", run these two commands:
+
+```bash
+cd /Users/baylorharrison/Documents/GitHub/f50-aws-lambda
+
+# 1. Deploy
+echo "y" | npm run deploy:bb-dev
+
+# 2. Push both branches to GitHub
+git push origin baylor/bb-dev-combined && git push origin baylor/consult-automation
+```
+
+That's it. No need to check status or merge - just deploy and push.
+
+#### Quick Deploy (First Time Setup)
 
 **From the f50-aws-lambda repo:**
 ```bash
@@ -265,6 +281,9 @@ git checkout baylor/bb-dev-combined
 
 # Deploy using npm script (handles build + deploy)
 echo "y" | npm run deploy:bb-dev
+
+# Push to GitHub
+git push origin baylor/bb-dev-combined && git push origin baylor/consult-automation
 ```
 
 The `deploy:bb-dev` script automatically:
