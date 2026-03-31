@@ -101,6 +101,7 @@ export default function ShoppingListSlide({
           image: bloom.image || null,
           stemsNeeded: quantity,
           selectedVariant: selectedVariant?.label || '',
+          variantId: selectedVariant?.variantId || null,
           price: selectedVariant?.price || 0,
         };
       });
@@ -165,6 +166,7 @@ export default function ShoppingListSlide({
         category: bloom.category || 'Uncategorized',
         image: bloom.image || null,
         selectedVariant: variant?.label || '',
+        variantId: variant?.variantId || null,
         price: variant?.price || 0,
       };
     });
@@ -198,6 +200,16 @@ export default function ShoppingListSlide({
   const total = subtotal - discount;
 
   const formatPrice = (price) => `$${price.toFixed(2)}`;
+
+  // Build Shopify cart URL from selected variants
+  const cartUrl = useMemo(() => {
+    const cartItems = shoppingItems
+      .map(item => item.variantId ? `${item.variantId}:1` : null)
+      .filter(Boolean);
+
+    if (cartItems.length === 0) return 'https://www.fiftyflowers.com';
+    return `https://www.fiftyflowers.com/cart/${cartItems.join(',')}`;
+  }, [shoppingItems]);
 
   // Format dates
   const formatDate = (timestamp) => {
@@ -348,9 +360,9 @@ export default function ShoppingListSlide({
             )}
           </div>
 
-          {/* Purchase Button */}
+          {/* Purchase Button - links to pre-filled Shopify cart */}
           <a
-            href="https://www.fiftyflowers.com"
+            href={cartUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-fit bg-[#4a9380] hover:bg-[#3d7a6a] text-white font-['Nunito_Sans',sans-serif] font-bold text-[14px] uppercase px-[30px] py-[15px] rounded-[25px] transition-colors"

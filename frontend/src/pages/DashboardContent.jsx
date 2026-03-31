@@ -1,7 +1,7 @@
 // DashboardContent - Main content only (Layout provides sidebar)
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProposals } from '../hooks/useProposals';
+import { useProposals, proposalService } from '../hooks/useProposals';
 import { HandWrittenTitle } from '../components/ui/HandWrittenTitle';
 import { GlowingEffect } from '../components/ui/GlowingEffect';
 
@@ -29,7 +29,33 @@ const LEVEL_LABELS = {
 
 export default function DashboardContent() {
   const navigate = useNavigate();
-  const { proposals, loading, error } = useProposals();
+  const { proposals, loading, error, refresh } = useProposals();
+  const [duplicating, setDuplicating] = useState(null); // Track which proposal is being duplicated
+
+  // Duplicate a proposal
+  const handleDuplicate = async (proposal) => {
+    setDuplicating(proposal.id);
+    try {
+      // Create a copy without the id and timestamps
+      const { id, createdAt, updatedAt, ...proposalData } = proposal;
+
+      // Update names to indicate it's a copy
+      const duplicatedData = {
+        ...proposalData,
+        eventName: `Copy of ${proposal.eventName || 'Untitled'}`,
+        proposalName: `Copy of ${proposal.proposalName || 'Untitled'}`,
+      };
+
+      const newId = await proposalService.create(duplicatedData);
+      refresh(); // Refresh the proposals list
+      navigate(`/proposal/${newId}`); // Navigate to the new proposal
+    } catch (err) {
+      console.error('Failed to duplicate proposal:', err);
+      alert('Failed to duplicate proposal. Please try again.');
+    } finally {
+      setDuplicating(null);
+    }
+  };
 
   // Format Firestore timestamp to display string
   // Handles: Firestore Timestamp, serialized {seconds, nanoseconds}, Date, ISO string
@@ -109,6 +135,8 @@ export default function DashboardContent() {
               author={proposal.author}
               onEdit={() => navigate(`/proposal/${proposal.id}`)}
               onView={() => navigate(`/proposal/${proposal.id}/presentation`)}
+              onDuplicate={() => handleDuplicate(proposal)}
+              isDuplicating={duplicating === proposal.id}
               index={index}
             />
           ))}
@@ -191,7 +219,7 @@ function SkeletonCard({ delay = 0 }) {
   );
 }
 
-function ProposalCard({ type, typeColor, title, image, date, author, onEdit, onView, index = 0 }) {
+function ProposalCard({ type, typeColor, title, image, date, author, onEdit, onView, onDuplicate, isDuplicating, index = 0 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -248,8 +276,12 @@ function ProposalCard({ type, typeColor, title, image, date, author, onEdit, onV
           <button onClick={onEdit} className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6]">
             Edit
           </button>
-          <button className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black">
-            Duplicate
+          <button
+            onClick={onDuplicate}
+            disabled={isDuplicating}
+            className="border border-[#999] border-solid px-[10px] py-[5px] font-['Avenir:Medium',sans-serif] text-[12px] text-black cursor-pointer hover:bg-[#f3f5f6] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDuplicating ? 'Copying...' : 'Duplicate'}
           </button>
         </div>
       </div>
