@@ -46,6 +46,7 @@ const defaultFormData = {
   deliveryDate: '',
   styleNotes: '',
   couponCode: 'Consult2026',
+  cardImage: '',
 };
 
 export default function ProposalFormContent() {
@@ -271,6 +272,7 @@ export default function ProposalFormContent() {
         deliveryDate: formatDateForInput(proposal.deliveryDate),
         styleNotes: proposal.styleNotes || '',
         couponCode: validCouponCode,
+        cardImage: proposal.cardImage || '',
       });
 
       // Load arrays from proposal
@@ -928,6 +930,48 @@ export default function ProposalFormContent() {
           <p className="font-['Avenir:Heavy',sans-serif] text-[#161616] text-[18px] w-full">
             Consultation Proposal Set
           </p>
+
+          {/* Cover Photo */}
+          <div className="w-full flex gap-[20px] items-start border-b border-[#eee] pb-[20px]">
+            <div className="flex flex-col gap-[10px]">
+              <p className="font-['Avenir:Heavy',sans-serif] text-[#666] text-[14px]">Cover Photo:</p>
+              {formData.cardImage ? (
+                <div className="w-[150px] h-[100px] overflow-hidden rounded-[5px] border border-[#ccc]">
+                  <img src={formData.cardImage} alt="Cover" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-[150px] h-[100px] border border-dashed border-[#ccc] rounded-[5px] flex items-center justify-center text-[#999] text-[12px]">
+                  No cover photo
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-[8px] pt-[24px]">
+              <input
+                type="file"
+                ref={recipeFileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => updateField('cardImage', ev.target.result);
+                    reader.readAsDataURL(file);
+                  }
+                  e.target.value = '';
+                }}
+                accept="image/*"
+                className="hidden"
+                id="coverPhotoInput"
+              />
+              <button onClick={() => document.getElementById('coverPhotoInput')?.click()} className="btn-action-outline text-[12px] py-[5px] px-[12px]">Upload</button>
+              <input
+                type="text"
+                value={formData.cardImage}
+                onChange={(e) => updateField('cardImage', e.target.value)}
+                placeholder="Paste URL..."
+                className="border border-[#ccc] rounded-[4px] px-[8px] py-[5px] text-[12px] w-[120px] outline-none"
+              />
+            </div>
+          </div>
 
           <FormField label="Customer Name:">
             <input
