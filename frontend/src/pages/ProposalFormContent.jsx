@@ -217,6 +217,8 @@ export default function ProposalFormContent() {
   const recipeFormRef = useRef(null);
   const recipesSectionRef = useRef(null);
   const recipeNameInputRef = useRef(null);
+  const recipeFileInputRef = useRef(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   // Preset color swatches for quick selection
   const presetColors = [
@@ -690,6 +692,51 @@ export default function ProposalFormContent() {
         setIsDragging(false);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Recipe image handlers
+  const handleRecipeFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        updateNewRecipe('photoUrl', event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+    if (recipeFileInputRef.current) recipeFileInputRef.current.value = '';
+  };
+
+  const handleGenerateRecipeImage = async () => {
+    if (generatingImage) return;
+    setGeneratingImage(true);
+    try {
+      const flowerNames = newRecipe.ingredients
+        ?.map(ing => ing.item)
+        .filter(Boolean) || [];
+
+      const response = await fetch('https://lte9x6yrn5.execute-api.us-east-1.amazonaws.com/Prod/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipeName: newRecipe.name,
+          description: newRecipe.description,
+          ingredients: newRecipe.ingredients,
+          flowerNames
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.imageUrl) {
+          updateNewRecipe('photoUrl', data.imageUrl);
+        }
+      }
+    } catch (err) {
+      console.error('Image generation error:', err);
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -1959,7 +2006,17 @@ export default function ProposalFormContent() {
 
                     {/* Photo Buttons */}
                     <div className="flex flex-col gap-[10px] items-start justify-center w-[150px]">
-                      <button className="btn-action-outline w-full text-[13px] py-[6px]">
+                      <input
+                        type="file"
+                        ref={recipeFileInputRef}
+                        onChange={handleRecipeFileUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => recipeFileInputRef.current?.click()}
+                        className="btn-action-outline w-full text-[13px] py-[6px]"
+                      >
                         Upload Photo
                       </button>
                       <input
@@ -1969,8 +2026,12 @@ export default function ProposalFormContent() {
                         placeholder="Paste image URL..."
                         className="border border-[#ccc] border-solid rounded-[4px] px-[10px] py-[6px] w-full font-['Avenir:Roman',sans-serif] text-[#666] text-[12px] outline-none"
                       />
-                      <button className="btn-action-outline w-full text-[13px] py-[6px]">
-                        Create via AI
+                      <button
+                        onClick={handleGenerateRecipeImage}
+                        disabled={generatingImage}
+                        className="btn-action-outline w-full text-[13px] py-[6px] disabled:opacity-50"
+                      >
+                        {generatingImage ? 'Generating...' : 'Create via AI'}
                       </button>
                     </div>
                   </div>
